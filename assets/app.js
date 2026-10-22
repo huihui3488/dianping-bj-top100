@@ -9,9 +9,14 @@
   var S = window.SITE;
   if (!S) return;
 
-  var META = S.meta, ST = S.stats, ITEMS = S.items, POOL = S.pool;
-  var SC = META.scoring;
-  var BRAND = '#DD4B22', TEAL = '#2A6C60', GOLD = '#A8792A', INK4 = '#9AA0A9', LINE = '#E3E0DA';
+  var META = S.meta, ST = S.stats, ITEMS = S.items, POOL = S.pool, SC = META.scoring;
+
+  /* 与样式表一致的数据色 */
+  var D1 = '#1B4B72';   // 印蓝：主序列 / 评分贡献 / 入榜
+  var D2 = '#A9713F';   // 赭：次序列 / 评论贡献
+  var D3 = '#DDD9CE';   // 底纹：落榜 / 全量
+  var D4 = '#6E7A6A';   // 苔绿：第三序列
+  var INK = '#17191B', INK3 = '#7C8288', RULE = '#DCDAD3';
 
   /* 未入榜门店追加在 Top100 之后，构成统一的 150 行候选池 */
   var ALL = ITEMS.slice();
@@ -41,18 +46,17 @@
   }
   function txt(x, y, s, o) {
     o = o || {};
-    return '<text x="' + x + '" y="' + y + '" fill="' + (o.fill || '#3C424B') + '"' +
-      ' font-size="' + (o.size || 11) + '" font-family="system-ui,-apple-system,Segoe UI,Microsoft YaHei,sans-serif"' +
+    return '<text x="' + x + '" y="' + y + '" fill="' + (o.fill || '#4A4F55') + '"' +
+      ' font-size="' + (o.size || 11) + '" font-family="' +
+      (o.serif ? 'Georgia,Times New Roman,serif' : 'Microsoft YaHei,PingFang SC,system-ui,sans-serif') + '"' +
       ' text-anchor="' + (o.anchor || 'start') + '"' +
       (o.weight ? ' font-weight="' + o.weight + '"' : '') +
-      (o.opacity ? ' opacity="' + o.opacity + '"' : '') +
       (o.mono ? ' font-variant-numeric="tabular-nums"' : '') + '>' + esc(s) + '</text>';
   }
   function rect(x, y, w, h, fill, o) {
     o = o || {};
     return '<rect x="' + x + '" y="' + y + '" width="' + Math.max(0, w) + '" height="' + h +
-      '" fill="' + fill + '" rx="' + (o.rx == null ? 2 : o.rx) + '"' +
-      (o.opacity ? ' opacity="' + o.opacity + '"' : '') + '/>';
+      '" fill="' + fill + '"' + (o.opacity ? ' opacity="' + o.opacity + '"' : '') + '/>';
   }
   function line(x1, y1, x2, y2, stroke, o) {
     o = o || {};
@@ -65,20 +69,20 @@
   /* ---------------------------------------------------------------- 横向条形 */
   function hbars(host, data, opt) {
     opt = opt || {};
-    var W = 600, labelW = opt.labelW || 148, padR = opt.padR || 66;
-    var rowH = opt.rowH || 26, top = 6;
+    var W = 600, labelW = opt.labelW || 150, padR = opt.padR || 66;
+    var rowH = opt.rowH || 27, top = 4;
     var H = top * 2 + data.length * rowH;
     var barX = labelW, barW = W - labelW - padR;
     var max = Math.max.apply(null, data.map(function (d) { return d.value; })) || 1;
     var b = '';
     data.forEach(function (d, i) {
       var y = top + i * rowH, w = d.value / max * barW;
-      b += txt(barX - 10, y + rowH * 0.62, clip(d.label, opt.labelChars || 13),
-        { anchor: 'end', size: opt.size || 11.5, fill: '#3C424B' });
-      b += rect(barX, y + rowH * 0.22, barW, rowH * 0.52, '#F0EDE7', { rx: 3 });
-      b += rect(barX, y + rowH * 0.22, w, rowH * 0.52, d.color || BRAND, { rx: 3 });
-      b += txt(barX + barW + 8, y + rowH * 0.62, d.display != null ? d.display : nfmt(d.value),
-        { size: opt.size || 11.5, fill: '#15181D', weight: 600, mono: true });
+      b += txt(barX - 10, y + rowH * 0.64, clip(d.label, opt.labelChars || 13),
+        { anchor: 'end', size: opt.size || 11.5, fill: '#4A4F55' });
+      b += rect(barX, y + rowH * 0.3, barW, 7, '#F2F1EC');
+      b += rect(barX, y + rowH * 0.3, w, 7, d.color || D1);
+      b += txt(barX + barW + 8, y + rowH * 0.64, d.display != null ? d.display : nfmt(d.value),
+        { size: opt.size || 11.5, fill: INK, weight: 700, serif: true, mono: true });
     });
     host.innerHTML = svg(W, H, b);
   }
@@ -86,21 +90,21 @@
   /* ---------------------------------------------------------------- 竖向柱状 */
   function vbars(host, data, opt) {
     opt = opt || {};
-    var W = 600, H = opt.height || 250, padL = 14, padB = 42, padT = 26;
+    var W = 600, H = opt.height || 250, padL = 12, padB = 44, padT = 24;
     var plotH = H - padB - padT;
     var slot = (W - padL * 2) / data.length;
-    var bw = Math.min(opt.barW || 54, slot * 0.58);
+    var bw = Math.min(opt.barW || 52, slot * 0.52);
     var max = Math.max.apply(null, data.map(function (d) { return d.value; })) || 1;
-    var b = line(padL, H - padB, W - padL, H - padB, LINE);
+    var b = line(padL, H - padB, W - padL, H - padB, INK, { w: 1 });
     data.forEach(function (d, i) {
       var cx = padL + slot * (i + 0.5);
       var h = d.value / max * plotH;
       var x = cx - bw / 2, y = H - padB - h;
-      b += rect(x, y, bw, h, d.color || BRAND, { rx: 3 });
+      b += rect(x, y, bw, h, d.color || D1);
       b += txt(cx, y - 8, d.display != null ? d.display : nfmt(d.value),
-        { anchor: 'middle', size: 12, fill: '#15181D', weight: 650, mono: true });
-      b += txt(cx, H - padB + 20, d.label, { anchor: 'middle', size: 11.5, fill: '#6E7480' });
-      if (d.sub) b += txt(cx, H - padB + 35, d.sub, { anchor: 'middle', size: 10.5, fill: '#9AA0A9' });
+        { anchor: 'middle', size: 12, fill: INK, weight: 700, serif: true, mono: true });
+      b += txt(cx, H - padB + 19, d.label, { anchor: 'middle', size: 11.5, fill: '#4A4F55' });
+      if (d.sub) b += txt(cx, H - padB + 34, d.sub, { anchor: 'middle', size: 10.5, fill: INK3, serif: true, mono: true });
     });
     host.innerHTML = svg(W, H, b);
   }
@@ -108,69 +112,67 @@
   /* ---------------------------------------------------------------- 堆叠柱（进榜 / 落榜） */
   function stackedCols(host, data, opt) {
     opt = opt || {};
-    var W = 600, H = opt.height || 270, padL = 20, padB = 46, padT = 30;
+    var W = 600, H = opt.height || 268, padL = 16, padB = 46, padT = 34;
     var plotH = H - padB - padT;
     var slot = (W - padL * 2) / data.length;
-    var bw = Math.min(78, slot * 0.5);
+    var bw = Math.min(76, slot * 0.46);
     var max = Math.max.apply(null, data.map(function (d) { return d.total; })) || 1;
-    var b = line(padL, H - padB, W - padL, H - padB, LINE);
+    var b = line(padL, H - padB, W - padL, H - padB, INK, { w: 1 });
     data.forEach(function (d, i) {
       var cx = padL + slot * (i + 0.5);
       var hIn = d.in / max * plotH, hOut = (d.total - d.in) / max * plotH;
       var yOut = H - padB - hOut, yIn = yOut - hIn;
-      b += rect(cx - bw / 2, yOut, bw, hOut, '#DFD9CE', { rx: 2 }) + tip(d.label + ' 分：未入榜 ' + (d.total - d.in) + ' 家');
-      b += rect(cx - bw / 2, yIn, bw, hIn, BRAND, { rx: 2 }) + tip(d.label + ' 分：入榜 ' + d.in + ' 家');
-      b += txt(cx, yIn - 22, d.rate + '%', { anchor: 'middle', size: 13, fill: BRAND, weight: 700, mono: true });
-      b += txt(cx, yIn - 8, d.in + '/' + d.total, { anchor: 'middle', size: 10.5, fill: '#6E7480', mono: true });
-      b += txt(cx, H - padB + 20, d.label + ' 分', { anchor: 'middle', size: 12, fill: '#15181D', weight: 600 });
-      b += txt(cx, H - padB + 35, '进榜率', { anchor: 'middle', size: 10, fill: '#9AA0A9' });
+      b += rect(cx - bw / 2, yOut, bw, hOut, D3) + tip(d.label + ' 分：未入榜 ' + (d.total - d.in) + ' 家');
+      b += rect(cx - bw / 2, yIn, bw, hIn, D1) + tip(d.label + ' 分：入榜 ' + d.in + ' 家');
+      b += txt(cx, yIn - 21, d.rate + '%', { anchor: 'middle', size: 13, fill: D1, weight: 700, serif: true, mono: true });
+      b += txt(cx, yIn - 8, d.in + '/' + d.total, { anchor: 'middle', size: 10.5, fill: INK3, serif: true, mono: true });
+      b += txt(cx, H - padB + 19, d.label + ' 分', { anchor: 'middle', size: 12, fill: INK, weight: 700 });
+      b += txt(cx, H - padB + 34, '进榜率', { anchor: 'middle', size: 10, fill: INK3 });
     });
     host.innerHTML = svg(W, H, b);
   }
 
-  /* ---------------------------------------------------------------- 分组柱（菜系 全量 vs 进榜） */
+  /* ---------------------------------------------------------------- 分组柱（菜系） */
   function groupedBars(host, data, opt) {
     opt = opt || {};
-    var W = 620, H = opt.height || 300, padL = 16, padB = 64, padT = 26;
+    var W = 620, H = opt.height || 290, padL = 14, padB = 62, padT = 26;
     var plotH = H - padB - padT;
     var slot = (W - padL * 2) / data.length;
-    var bw = Math.min(26, slot * 0.3);
+    var bw = Math.min(24, slot * 0.28);
     var max = Math.max.apply(null, data.map(function (d) { return d.total; })) || 1;
-    var b = line(padL, H - padB, W - padL, H - padB, LINE);
+    var b = line(padL, H - padB, W - padL, H - padB, INK, { w: 1 });
     data.forEach(function (d, i) {
       var cx = padL + slot * (i + 0.5);
       var hT = d.total / max * plotH, hI = d.in / max * plotH;
-      b += rect(cx - bw - 2, H - padB - hT, bw, hT, '#DFD9CE', { rx: 2 }) + tip(d.name + '：全量 ' + d.total);
-      b += rect(cx + 2, H - padB - hI, bw, hI, TEAL, { rx: 2 }) + tip(d.name + '：进榜 ' + d.in);
-      b += txt(cx - bw / 2 - 2, H - padB - hT - 5, d.total, { anchor: 'middle', size: 10, fill: '#8B8578', mono: true });
-      b += txt(cx + bw / 2 + 2, H - padB - hI - 5, d.in, { anchor: 'middle', size: 10, fill: TEAL, weight: 650, mono: true });
-      b += txt(cx, H - padB + 16, clip(d.name, 5), { anchor: 'middle', size: 10.5, fill: '#3C424B' });
-      b += txt(cx, H - padB + 31, d.rate + '%', { anchor: 'middle', size: 9.5, fill: '#9AA0A9', mono: true });
+      b += rect(cx - bw - 1.5, H - padB - hT, bw, hT, D3) + tip(d.name + '：全量 ' + d.total);
+      b += rect(cx + 1.5, H - padB - hI, bw, hI, D1) + tip(d.name + '：进榜 ' + d.in);
+      b += txt(cx - bw / 2 - 1.5, H - padB - hT - 5, d.total, { anchor: 'middle', size: 10, fill: INK3, serif: true, mono: true });
+      b += txt(cx + bw / 2 + 1.5, H - padB - hI - 5, d.in, { anchor: 'middle', size: 10, fill: D1, weight: 700, serif: true, mono: true });
+      b += txt(cx, H - padB + 15, clip(d.name, 5), { anchor: 'middle', size: 10.5, fill: '#4A4F55' });
+      b += txt(cx, H - padB + 30, d.rate + '%', { anchor: 'middle', size: 9.5, fill: INK3, serif: true, mono: true });
     });
     host.innerHTML = svg(W, H, b);
   }
 
   /* ---------------------------------------------------------------- 气泡图 */
-  function scatter(host, pool, opt) {
-    opt = opt || {};
-    var W = 620, H = 400, L = 54, R = 18, T = 18, B = 48;
+  function scatter(host, pool) {
+    var W = 620, H = 400, L = 54, R = 18, T = 22, B = 46;
     var pw = W - L - R, ph = H - T - B;
     var xmin = 3.4, xmax = 5.1, ymin = 3.0, ymax = 5.0;
     var b = '';
     for (var g = 0; g <= 4; g++) {
       var yv = ymin + (ymax - ymin) * g / 4;
       var yy = T + ph - (yv - ymin) / (ymax - ymin) * ph;
-      b += line(L, yy, W - R, yy, g === 0 ? LINE : '#F2EFE9');
+      b += line(L, yy, W - R, yy, g === 0 ? INK : '#F1F0EB');
       b += txt(L - 8, yy + 4, nfmt(Math.round(Math.pow(10, yv))),
-        { anchor: 'end', size: 10.5, fill: INK4, mono: true });
+        { anchor: 'end', size: 10.5, fill: INK3, serif: true, mono: true });
     }
     [3.5, 4.0, 4.5, 5.0].forEach(function (xv) {
       var xx = L + (xv - xmin) / (xmax - xmin) * pw;
-      b += line(xx, T, xx, T + ph, '#F2EFE9');
-      b += txt(xx, H - B + 18, xv.toFixed(1), { anchor: 'middle', size: 10.5, fill: INK4, mono: true });
+      b += line(xx, T, xx, T + ph, '#F1F0EB');
+      b += txt(xx, H - B + 18, xv.toFixed(1), { anchor: 'middle', size: 10.5, fill: INK3, serif: true, mono: true });
     });
-    b += txt(L + 6, T + 12, '评论数（对数轴）', { size: 10.5, fill: INK4 });
-    b += txt(W - R, H - 8, '评分', { anchor: 'end', size: 10.5, fill: INK4 });
+    b += txt(W - R, H - 8, '评分', { anchor: 'end', size: 10.5, fill: INK3 });
 
     function pos(d) {
       var x = L + (Math.min(Math.max(d.rating, xmin), xmax) - xmin) / (xmax - xmin) * pw;
@@ -178,80 +180,73 @@
       var y = T + ph - (Math.min(Math.max(ly, ymin), ymax) - ymin) / (ymax - ymin) * ph;
       return { x: x, y: y };
     }
-
-    // 先画落榜（空心），再画入榜（实心），保证入榜在上层
-    pool.slice().filter(function (d) { return !d.in_top; }).forEach(function (d) {
+    pool.filter(function (d) { return !d.in_top; }).forEach(function (d) {
       var p = pos(d), r = 3 + Math.sqrt(d.avg_price) / 3.4;
       b += '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + r.toFixed(1) +
-        '" fill="none" stroke="#B9B2A5" stroke-width="1.1">' +
+        '" fill="none" stroke="#BFB9AC" stroke-width="1.1">' +
         tip(d.name + '｜' + d.rating + ' 分｜' + nfmt(d.review_count) + ' 条｜未入榜') + '</circle>';
     });
-    pool.slice().filter(function (d) { return d.in_top; }).forEach(function (d) {
+    pool.filter(function (d) { return d.in_top; }).forEach(function (d) {
       var p = pos(d), r = 3 + Math.sqrt(d.avg_price) / 3.4;
-      var c = d.rating === 5.0 ? BRAND : (d.rating === 4.5 ? '#E8843D' : GOLD);
+      var c = d.rating === 5.0 ? D1 : D2;
       b += '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + r.toFixed(1) +
-        '" fill="' + c + '" opacity=".42" stroke="' + c + '" stroke-width=".7">' +
+        '" fill="' + c + '" opacity=".5">' +
         tip(d.name + '｜' + d.rating + ' 分｜' + nfmt(d.review_count) + ' 条｜第 ' + d.rank + ' 名') + '</circle>';
     });
 
-    // 评论数门槛线
     var ty = T + ph - (Math.log10(SC.min_review) - ymin) / (ymax - ymin) * ph;
-    b += line(L, ty, W - R, ty, '#C24A2A', { dash: '4 4' });
-    b += txt(L + 4, ty - 6, '评论数门槛 ' + nfmt(SC.min_review), { size: 10, fill: '#C24A2A' });
+    b += line(L, ty, W - R, ty, D2, { dash: '4 4' });
+    b += txt(L + 4, ty - 6, '评论数门槛 ' + nfmt(SC.min_review), { size: 10, fill: D2 });
 
-    // 标注反直觉的那一个点：评论数全站第一，却因评分档差排在中段
     var mark = META.busiest;
     if (mark) {
-      var mp = pos(mark);
+      var mp = pos({ rating: mark.rating, review_count: mark.reviews });
       b += '<circle cx="' + mp.x.toFixed(1) + '" cy="' + mp.y.toFixed(1) +
-        '" r="6" fill="none" stroke="#15181D" stroke-width="1.5"/>';
-      b += line(mp.x - 10, mp.y, mp.x - 62, mp.y, '#15181D', { w: 1 });
+        '" r="6" fill="none" stroke="' + INK + '" stroke-width="1.5"/>';
+      b += line(mp.x - 10, mp.y, mp.x - 62, mp.y, INK, { w: 1 });
       b += txt(mp.x - 68, mp.y + 4,
         '评论数全站第一 · ' + clip(mark.name, 11) + ' · ' + nfmt(mark.reviews) + ' 条 · 第 ' + mark.rank + ' 名',
-        { anchor: 'end', size: 10.5, fill: '#15181D', weight: 650 });
+        { anchor: 'end', size: 10.5, fill: INK, weight: 700 });
     }
-    host.innerHTML = svg(W, H, b);
     host.innerHTML = svg(W, H, b);
   }
 
-  /* ---------------------------------------------------------------- 堆叠横条（Top15） */
+  /* ---------------------------------------------------------------- 分数拆解条 */
   function stackedTop(host, items) {
     var data = items.slice(0, 15);
-    var W = 620, labelW = 196, padR = 54, rowH = 27, top = 8;
-    var H = top * 2 + data.length * rowH + 8;
+    var W = 620, labelW = 196, padR = 52, rowH = 27, top = 6;
+    var H = top * 2 + data.length * rowH;
     var barX = labelW, barW = W - labelW - padR;
     var max = Math.max.apply(null, data.map(function (d) { return d.final_score; })) || 1;
-    var b = '';
+    var b = line(barX, top - 2, barX, top + data.length * rowH - 8, RULE);
     data.forEach(function (d, i) {
       var y = top + i * rowH;
       var total = d.final_score / max * barW;
       var cR = SC.w_rating * d.rating_norm, cV = SC.w_review * d.review_norm;
       var wR = cR / (cR + cV) * total;
-      b += txt(barX - 10, y + rowH * 0.62, clip(d.name, 17),
-        { anchor: 'end', size: 11.5, fill: '#15181D', weight: i < 3 ? 650 : 400 });
-      b += rect(barX, y + rowH * 0.2, barW, rowH * 0.56, '#F7F4EE', { rx: 3 });
-      b += rect(barX, y + rowH * 0.2, wR, rowH * 0.56, BRAND, { rx: 3 });
-      b += rect(barX + wR, y + rowH * 0.2, total - wR, rowH * 0.56, TEAL, { rx: 3 });
-      b += txt(barX + barW + 8, y + rowH * 0.62, d.final_score.toFixed(3),
-        { size: 11.5, fill: '#15181D', weight: 600, mono: true });
+      b += txt(barX - 12, y + rowH * 0.64, clip(d.name, 17),
+        { anchor: 'end', size: 11.5, fill: INK, weight: i < 3 ? 700 : 400 });
+      b += rect(barX + 8, y + rowH * 0.28, barW, 9, '#F2F1EC');
+      b += rect(barX + 8, y + rowH * 0.28, wR, 9, D1);
+      b += rect(barX + 8 + wR, y + rowH * 0.28, total - wR, 9, D2);
+      b += txt(barX + barW + 12, y + rowH * 0.64, d.final_score.toFixed(3),
+        { size: 11.5, fill: INK, weight: 700, serif: true, mono: true });
     });
     host.innerHTML = svg(W, H, b);
   }
 
-  /* ---------------------------------------------------------------- 前三名 */
-  function initPodium() {
-    var host = el('#podium');
+  /* ---------------------------------------------------------------- 首屏前三 */
+  function initHead() {
+    var host = el('#headList');
     if (!host) return;
-    var labels = ['TOP 1', 'TOP 2', 'TOP 3'];
-    host.innerHTML = ITEMS.slice(0, 3).map(function (d, i) {
-      return '<div class="pod r' + (i + 1) + '">' +
-        '<div class="rk">' + labels[i] + '</div>' +
-        '<div class="nm">' + esc(d.name) + '</div>' +
-        '<div class="meta">' + esc(d.cuisine) + ' · ' + esc(d.category) + ' · ' + esc(d.district) + '</div>' +
-        '<div class="sc">' + d.final_score.toFixed(3) + '<small>综合分</small></div>' +
-        '<div class="meta num" style="margin:10px 0 0">' + d.rating.toFixed(1) + ' 分 · 评论 ' +
-        nfmt(d.review_count) + ' · 人均 ¥' + d.avg_price + '</div>' +
-        '</div>';
+    host.innerHTML = ITEMS.slice(0, 3).map(function (d) {
+      return '<li>' +
+        '<span class="rk">' + d.rank + '</span>' +
+        '<span class="nm">' + esc(d.name) +
+        '<span>' + esc(d.cuisine) + ' / ' + esc(d.category) + '　' + esc(d.district) + '</span></span>' +
+        '<span class="rv num">' + nfmt(d.review_count) + ' 条评价</span>' +
+        '<span class="sc num">' + d.final_score.toFixed(3) + '</span>' +
+        '</li>';
     }).join('');
   }
 
@@ -309,33 +304,22 @@
       return out;
     }
 
-    function starHTML(r) {
-      var full = Math.floor(r), half = r - full >= 0.5, s = '';
-      for (var i = 0; i < 5; i++) {
-        s += i < full ? '★' : (i === full && half ? '☆' : '<span style="color:' + LINE + '">★</span>');
-      }
-      return s;
-    }
-
     function render() {
       var list = rows();
-      var maxScore = ITEMS[0].final_score;
       host.innerHTML = list.map(function (d) {
         var out = d.rank == null;
-        var pct = out ? 0 : (d.final_score / maxScore * 100).toFixed(1);
-        return '<tr class="' + (out ? 'dim' : '') + '">' +
-          '<td class="n"><b>' + (out ? '—' : d.rank) + '</b></td>' +
+        return '<tr class="' + (out ? 'gone' : '') + '">' +
+          '<td class="n">' + (out ? '—' : d.rank) + '</td>' +
           '<td class="name">' + esc(d.name) + '</td>' +
-          '<td><span class="stars">' + starHTML(d.rating) + '</span> <span class="dim num">' + d.rating.toFixed(1) + '</span></td>' +
-          '<td class="n num">' + nfmt(d.review_count) + '</td>' +
-          '<td class="n num">¥' + d.avg_price + '</td>' +
-          '<td class="dim">' + esc(d.cuisine) + '</td>' +
-          '<td class="dim">' + esc(d.district) + '</td>' +
-          '<td class="n num"><b>' + (out ? '落榜' : d.final_score.toFixed(3)) + '</b></td>' +
-          '<td><div class="bar"><span style="width:' + pct + '%"></span></div></td>' +
+          '<td class="n">' + d.rating.toFixed(1) + '</td>' +
+          '<td class="n">' + nfmt(d.review_count) + '</td>' +
+          '<td class="n">¥' + d.avg_price + '</td>' +
+          '<td>' + esc(d.cuisine) + '</td>' +
+          '<td>' + esc(d.district) + '</td>' +
+          '<td class="n">' + (out ? '—' : d.final_score.toFixed(3)) + '</td>' +
           '</tr>';
       }).join('');
-      cnt.textContent = '显示 ' + list.length + ' 家' + (state.scope ? '（Top100 内）' : '（全部 150 家候选）');
+      cnt.textContent = list.length + ' 条' + (state.scope ? '（Top100 内）' : '（全部 150 家）');
     }
 
     search.addEventListener('input', function (e) { state.q = e.target.value.trim(); render(); });
@@ -344,7 +328,6 @@
     fCuisine.addEventListener('change', function (e) { state.cuisine = e.target.value; render(); });
 
     els('#rankHead th[data-k]').forEach(function (th) {
-      th.style.cursor = 'pointer';
       th.addEventListener('click', function () {
         var k = th.getAttribute('data-k');
         if (state.sort === k) state.asc = !state.asc;
@@ -359,8 +342,8 @@
 
     els('[data-scope]').forEach(function (b) {
       b.addEventListener('click', function () {
-        els('[data-scope]').forEach(function (o) { o.classList.remove('on'); });
-        b.classList.add('on');
+        els('[data-scope]').forEach(function (o) { o.setAttribute('aria-pressed', 'false'); });
+        b.setAttribute('aria-pressed', 'true');
         state.scope = parseInt(b.getAttribute('data-scope'), 10);
         render();
       });
@@ -370,8 +353,7 @@
   }
 
   /* ---------------------------------------------------------------- 口径实验台 */
-  /* 与 build_ranking.py 等价的浏览器实现：
-     过滤 → 归一化（minmax / log1p）→ 加权 → 三级排序兜底 → 品牌限额 → 取前 N */
+  /* 与 build_ranking.py 等价：过滤 → 归一化 → 加权 → 三级排序 → 品牌限额 → 取前 N */
   function runPipeline(pool, w, minReview, maxBrand, topN) {
     var kept = pool.filter(function (d) { return d.review_count >= minReview; });
     if (!kept.length) return [];
@@ -401,7 +383,7 @@
     return rows.slice(0, topN);
   }
 
-  function initSim() {
+  function initTrial() {
     var slider = el('#wSlider');
     if (!slider) return;
     var rowsHost = el('#simRows');
@@ -413,7 +395,6 @@
       var w = parseFloat(slider.value) / 1000;
       var maxBrand = parseInt(fBrand.value, 10);
       var minReview = parseInt(fThr.value, 10);
-      slider.style.setProperty('--pct', (w * 100).toFixed(1) + '%');
 
       var res = runPipeline(POOL, w, minReview, maxBrand, 100);
       var ids = res.map(function (r) { return r.d.shop_id; });
@@ -425,11 +406,11 @@
       rowsHost.innerHTML = top15.map(function (r, i) {
         var chg = baseTop15.indexOf(r.d.shop_id) < 0;
         var wR = r.s > 0 ? w * r.rn / r.s * 100 : 0;
-        return '<div class="sim-row' + (chg ? ' chg' : '') + '">' +
+        return '<div class="srow' + (chg ? ' chg' : '') + '">' +
           '<span class="rk">' + (i + 1) + '</span>' +
           '<span class="nm" title="' + esc(r.d.name) + '">' + esc(r.d.name) + '</span>' +
-          '<span class="track"><span style="width:' + (r.s / max * 100).toFixed(1) +
-          '%;background:linear-gradient(90deg,' + BRAND + ' ' + wR.toFixed(0) + '%,' + TEAL + ' ' + wR.toFixed(0) + '%)"></span></span>' +
+          '<span class="trk"><i style="width:' + (r.s / max * 100).toFixed(1) +
+          '%;background:linear-gradient(90deg,' + D1 + ' ' + wR.toFixed(0) + '%,' + D2 + ' ' + wR.toFixed(0) + '%)"></i></span>' +
           '<span class="sc">' + r.s.toFixed(3) + '</span>' +
           '</div>';
       }).join('');
@@ -438,8 +419,8 @@
       set('#wShow', w.toFixed(3));
       set('#wrShow', (1 - w).toFixed(3));
       set('#simN', res.length + ' 家');
-      set('#simBrand', new Set(res.map(function (r) { return r.d.brand; })).size + ' 个品牌');
-      set('#sim5', res.filter(function (r) { return r.d.rating === 5.0; }).length + ' 家满分');
+      set('#simBrand', new Set(res.map(function (r) { return r.d.brand; })).size + ' 个');
+      set('#sim5', res.filter(function (r) { return r.d.rating === 5.0; }).length + ' 家');
       set('#simOverlap', overlap + ' / 100');
       set('#simChg', String(100 - overlap));
       set('#simTop15', top15overlap + ' / 15');
@@ -447,8 +428,8 @@
       var base = el('#simBaseline');
       if (base) {
         var isBase = Math.abs(w - SC.w_rating) < 1e-9 && maxBrand === SC.max_brand && minReview === SC.min_review;
-        base.textContent = isBase ? '当前＝定稿口径' : '与定稿口径不同';
-        base.style.color = isBase ? 'var(--teal)' : 'var(--brand-ink)';
+        base.textContent = isBase ? '等同定稿口径' : '已偏离定稿口径';
+        base.style.color = isBase ? D1 : D2;
       }
     }
 
@@ -473,7 +454,7 @@
 
     host = el('#cDistrict');
     if (host) hbars(host, ST.district_top.map(function (d) {
-      return { label: d.label, value: d.value, color: TEAL };
+      return { label: d.label, value: d.value, color: D1 };
     }), { labelChars: 12 });
 
     host = el('#cRating');
@@ -485,20 +466,36 @@
         label: d.label, value: d.value,
         sub: (d.value / ST.n_top * 100).toFixed(0) + '%',
         display: d.value + ' 家',
-        color: d.label === '>¥350' ? GOLD : TEAL
+        color: d.label === '>¥350' ? D2 : D1
       };
-    }), { height: 262, barW: 54 });
+    }), { height: 258, barW: 52 });
 
     host = el('#cCuisineRate');
     if (host) {
       hbars(host, ST.cuisine.slice().sort(function (a, b) { return b.rate - a.rate; })
         .map(function (c) {
           return {
-            label: c.name, value: c.rate, display: c.rate + '%  ' + c.in + '/' + c.total,
-            color: c.rate >= 70 ? TEAL : (c.rate >= 45 ? GOLD : '#C9BBA8')
+            label: c.name, value: c.rate, display: c.rate + '%　' + c.in + '/' + c.total,
+            color: c.rate >= 70 ? D1 : (c.rate >= 45 ? D4 : D3)
           };
-        }), { labelChars: 7, labelW: 96, padR: 92 });
+        }), { labelChars: 7, labelW: 96, padR: 96 });
     }
+  }
+
+  /* ---------------------------------------------------------------- 对照表 */
+  function initCompare() {
+    var host = el('#compareBody');
+    if (!host || !META.compare) return;
+    host.innerHTML = META.compare.map(function (c, i) {
+      var base = i === 0;
+      return '<tr' + (base ? ' style="background:#F7F9FB"' : '') + '>' +
+        '<td' + (base ? ' class="name"' : '') + '>' + esc(c.label) + '</td>' +
+        '<td class="n">' + c.brands + '</td>' +
+        '<td class="n">' + c.full_marks + '</td>' +
+        '<td class="n">' + c.overlap + ' / 100</td>' +
+        '<td class="n">' + (base ? '—' : c.changed) + '</td>' +
+        '</tr>';
+    }).join('');
   }
 
   /* ---------------------------------------------------------------- 代码页 */
@@ -517,7 +514,9 @@
       pathEl.textContent = s.name;
       tailEl.textContent = s.lines + ' 行';
       host.scrollTop = 0;
-      tabs.forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-code') === key); });
+      tabs.forEach(function (b) {
+        b.setAttribute('aria-selected', b.getAttribute('data-code') === key ? 'true' : 'false');
+      });
       if (copy) copy.setAttribute('data-for', key);
     }
     tabs.forEach(function (b) {
@@ -544,15 +543,15 @@
     var expand = el('#codeExpand');
     if (expand) {
       expand.addEventListener('click', function () {
-        var on = host.classList.toggle('full');
-        host.style.maxHeight = on ? 'none' : '';
-        expand.textContent = on ? '收起' : '展开全文';
+        var on = host.style.maxHeight === 'none';
+        host.style.maxHeight = on ? '' : 'none';
+        expand.textContent = on ? '展开全文' : '收起';
       });
     }
     show(current);
   }
 
-  /* ---------------------------------------------------------------- 贯穿数字 */
+  /* ---------------------------------------------------------------- 数字绑定 */
   function initNumbers() {
     els('[data-num]').forEach(function (e) {
       var v = e.getAttribute('data-num').split('.')
@@ -565,29 +564,12 @@
     });
   }
 
-  /* ---------------------------------------------------------------- 口径对比表 */
-  function initCompare() {
-    var host = el('#compareBody');
-    if (!host || !META.compare) return;
-    host.innerHTML = META.compare.map(function (c, i) {
-      var base = i === 0;
-      return '<tr' + (base ? ' style="background:#FBF3E4"' : '') + '>' +
-        '<td>' + (base ? '<b>' + esc(c.label) + '</b>' : esc(c.label)) + '</td>' +
-        '<td class="n num">' + c.brands + '</td>' +
-        '<td class="n num">' + c.full_marks + '</td>' +
-        '<td class="n num">' + c.overlap + ' / 100</td>' +
-        '<td class="n num">' + (base ? '—' : '<b style="color:var(--brand-ink)">' + c.changed + '</b>') + '</td>' +
-        '</tr>';
-    }).join('');
-  }
-
-  /* ---------------------------------------------------------------- 启动 */
   function boot() {
     initNumbers();
-    initPodium();
+    initHead();
     initCharts();
     initRankTable();
-    initSim();
+    initTrial();
     initCompare();
     initCode();
     var y = el('#year'); if (y) y.textContent = new Date().getFullYear();
