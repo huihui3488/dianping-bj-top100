@@ -4,116 +4,55 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>代码 · 北京餐厅 Top100</title>
-<meta name="description" content="采集、解析、建模三个脚本的完整源码、关键决策与踩坑记录。">
-<link rel="stylesheet" href="assets/base.css?v=2">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23DD4B22'/><text x='16' y='23' font-size='18' font-family='sans-serif' font-weight='700' fill='white' text-anchor='middle'>京</text></svg>">
+<meta name="description" content="采集、解析、建模三个脚本的完整源码与实现取舍。">
+<link rel="stylesheet" href="assets/base.css?v=3">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%231B4B72'/><text x='16' y='23' font-size='17' font-family='Georgia,serif' font-weight='700' fill='white' text-anchor='middle'>京</text></svg>">
 </head>
 <body data-page="code" data-code-default="crawler">
 
-<header class="topbar">
-  <div class="wrap topbar-inner">
-    <a class="brand" href="index.html"><b>北京餐厅 Top100</b><span>Dianping&nbsp;/&nbsp;BJ</span></a>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="mark" href="index.html">北京餐厅 Top100<i>2026</i></a>
     <nav class="nav">
-      <a href="index.html">总览</a>
-      <a href="results.html">成果</a>
-      <a href="code.html" class="on">代码</a>
-      <a href="method.html">口径与局限</a>
+      <a href="index.html">概览</a>
+      <a href="results.html">榜单</a>
+      <a href="code.html" aria-current="page">代码</a>
+      <a href="method.html">口径</a>
     </nav>
   </div>
 </header>
 
 <main>
 
-<section class="hero" style="padding-bottom:36px">
-  <div class="wrap">
-    <div class="kicker">代码</div>
-    <h1 style="font-size:clamp(32px,4.4vw,50px)">1,464 行，<br>零第三方依赖</h1>
-    <p class="lead">
-      整条数据链路只有三个 Python 文件。它们刻意写得朴素：<b>只用标准库</b>，
-      连 YAML 都是自己写的四十行解析器，任何人 clone 下来不配环境就能跑。
-      复杂度没有放在代码技巧上，而是放在<b>反爬处理</b>、<b>解析容错</b>和<b>口径可校验</b>这三件真正会让人卡住的事上。
-    </p>
-    <div class="chips">
-      <span class="chip ok"><i></i>crawler.py <b>299</b> 行</span>
-      <span class="chip ok"><i></i>parser.py <b>420</b> 行</span>
-      <span class="chip ok"><i></i>build_ranking.py <b>745</b> 行</span>
-      <span class="chip ok"><i></i>pip install <b>0</b> 次</span>
+<div class="head">
+  <div class="wrap head-grid">
+    <div>
+      <h1>代码</h1>
+      <p class="lede">
+        整条链路三个 Python 文件，共 1464 行，只用标准库。连 YAML 都是自己写的四十行解析器，
+        谁把仓库拉下来都不用配环境。下面对应的复杂度和代码技巧无关，都在反爬、解析容错和口径校验这三件事上。
+      </p>
+    </div>
+    <div class="sheet">
+      <div><span>crawler.py</span><b>299<small>行</small></b></div>
+      <div><span>parser.py</span><b>420<small>行</small></b></div>
+      <div><span>build_ranking.py</span><b>745<small>行</small></b></div>
+      <div><span>第三方依赖</span><b>0</b></div>
+      <div><span>交叉验证</span><b>900<small>/900 字段</small></b></div>
     </div>
   </div>
-</section>
+</div>
 
-<section style="padding-top:0;border-top:0">
+<section class="section" style="border-top:0;padding-top:0">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">交接契约</div>
-      <h2>三个人之间，只有两张约定表</h2>
-      <p>成员 1 不关心数据怎么用，成员 2 不联网，成员 3 不碰原始 HTML。他们之间的接口就是这两张表——
-      只要表不变，三个人可以各自改代码。</p>
-    </div>
-
-    <div class="tbl-wrap">
-      <table class="tbl">
-        <thead>
-          <tr><th style="width:130px">字段</th><th style="width:320px">提取方式</th><th style="width:200px">实测样例</th><th>坑</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><code>shop_id</code></td><td><code>data-shopid="([A-Za-z0-9]+)"</code></td><td><code>k6ASsfEU2GWeDmTk</code></td><td>卡片唯一锚点，先锁它再取其它字段</td></tr>
-          <tr><td><code>name</code></td><td><code>&lt;h4&gt;(.*?)&lt;/h4&gt;</code></td><td>浩海火烧云傣家菜(京广店)</td><td>全页 <code>&lt;h4&gt;</code> 有 190 个，只有 150 个是店名</td></tr>
-          <tr><td><code>rating</code></td><td><code>class="star star_(\d+)"</code> ÷ 10</td><td><code>star_45</code> → 4.5</td><td>评分不写在文本里，只写在 CSS 类名里</td></tr>
-          <tr><td><code>review_count</code></td><td><code>&lt;b&gt;([\d,]+)&lt;/b&gt;\s*条评价</code></td><td><code>42,277</code> → 42277</td><td>带千分位逗号，<code>int()</code> 前要去掉</td></tr>
-          <tr><td><code>avg_price</code></td><td><code>人均\s*&lt;b&gt;[￥¥](\d+)&lt;/b&gt;</code></td><td>¥103</td><td>全角 ￥ 与半角 ¥ 都要兼容</td></tr>
-          <tr><td><code>category</code></td><td>第 1 个 <code>&lt;span class="tag"&gt;</code></td><td>云南菜\|滇菜</td><td>复合标签按原样保留，不拆</td></tr>
-          <tr><td><code>district</code></td><td>第 2 个 <code>&lt;span class="tag"&gt;</code></td><td>朝阳公园/团结湖</td><td>是商圈而非行政区，粒度更细</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <p style="font-size:13px;color:var(--ink-4);margin:10px 0 30px">
-      上表为成员 1 → 成员 2 的字段契约。成员 2 → 成员 3 的契约是 <code>restaurants_clean.csv</code> 的 8 列，成员 3 → 成员 4 的契约是 <code>top100.csv</code> 的 14 列（见下表）。
-    </p>
-
-    <div class="tbl-wrap">
-      <table class="tbl">
-        <thead>
-          <tr><th style="width:150px">输出字段</th><th style="width:120px">类型</th><th>说明 / 为什么成员 4 需要它</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><code>rank</code> <code>shop_id</code> <code>name</code></td><td>int / str</td><td>名次与身份三件套，去重与追溯都用 <code>shop_id</code></td></tr>
-          <tr><td><code>brand</code></td><td>str</td><td>品牌名，品牌限额去重靠它；榜单表格不展示但决定入榜</td></tr>
-          <tr><td><code>category</code> / <code>cuisine</code></td><td>str</td><td>细分品类（58 种）与菜系大类（9 种）<b>两列都保留</b>：精确检索用前者，分组统计用后者</td></tr>
-          <tr><td><code>district</code> / <code>rating</code> / <code>review_count</code> / <code>avg_price</code></td><td>str / float / int</td><td>明细表与筛选器直接用</td></tr>
-          <tr><td><code>rating_norm</code> / <code>review_norm</code></td><td>float</td><td><b>两个归一化分量</b>。有了它们，前端才能画「分数拆解」堆叠图，也才能做加权实验而不用重跑后端</td></tr>
-          <tr><td><code>final_score</code></td><td>float</td><td>综合分；JSON 里是真数字类型，不是字符串（否则前端没法排序画图）</td></tr>
-          <tr><td><code>source_page</code></td><td>int</td><td>平台原始页序，保留作辅助校验</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="note grey" style="margin-top:18px">
-      <span class="tag">先排除掉的三条路</span>
-      <p>开工第一件事是确认<b>哪些东西不存在</b>，避免白做：没有 <code>__NEXT_DATA__</code> 数据岛、没有 JSON-LD、没有 <code>monthly_sales</code>（月售）。
-      页面是纯服务端渲染的 HTML，所以只能用正则解析。这一步的判断直接决定了后面的技术路线，也直接导致客流量维度被砍。</p>
-    </div>
-  </div>
-</section>
-
-<section class="tint">
-  <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">源码</div>
-      <h2>完整实现，带行号</h2>
-      <p>三段代码都按「配置 → 工具函数 → 主流程」的顺序组织，改参数只动顶部的配置区。点击标签切换，右上角可复制全文。</p>
-    </div>
-
     <div class="tabs">
-      <button data-code="crawler" class="on">crawler.py<small>成员 1 · 采集 · 299 行</small></button>
-      <button data-code="parser">parser.py<small>成员 2 · 解析 · 420 行</small></button>
-      <button data-code="ranking">build_ranking.py<small>成员 3 · 建模 · 745 行</small></button>
+      <button data-code="crawler" aria-selected="true">crawler.py<small>韦继丞 / 采集 / 299 行</small></button>
+      <button data-code="parser" aria-selected="false">parser.py<small>王喆 / 解析 / 420 行</small></button>
+      <button data-code="ranking" aria-selected="false">build_ranking.py<small>杨博尧 / 建模 / 745 行</small></button>
     </div>
 
-    <div class="codewrap">
+    <div class="codebox">
       <div class="codebar">
-        <span class="dot"><i></i><i></i><i></i></span>
         <span class="path" id="codePath">crawler.py</span>
         <span class="tail" id="codeMeta">299 行</span>
         <button id="codeExpand">展开全文</button>
@@ -122,358 +61,287 @@
       <pre class="code" id="codeHost"></pre>
     </div>
 
-    <p style="font-size:12.5px;color:var(--ink-4);margin-top:12px">
-      源码来自三位成员的原始交付文件，未作任何改写；此处仅做语法着色与行号渲染。
-      着色由构建脚本 <code>build_site.py</code> 生成，不依赖任何前端高亮库。
+    <p style="margin-top:12px;font-size:12.5px;color:var(--ink-3)">
+      源码取自三位成员的原始交付文件。为免成果展示页出现面向课堂的措辞，构建时把几处注释改成了中性表述，
+      代码逻辑一行未动；行号与着色由构建脚本生成，不依赖前端高亮库。
     </p>
   </div>
 </section>
 
-<section>
+<section class="section band">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">成员 1 · 采集</div>
-      <h2>六个设计决策，每个都能被追问</h2>
-      <p>这一段代码本身不复杂。真正的难点在于「怎么不被封」——下面六条是实测过的应对，也是老师最容易挑着问的地方。</p>
+    <div class="h2blk">
+      <div class="rule"></div>
+      <h2>两个人的接口只有一张表</h2>
+      <p>采集不关心数据怎么用，解析不联网，建模不碰原始 HTML。三者之间的约定就是字段名、提取方式、样例值。</p>
     </div>
 
-    <div class="grid-2">
-      <div class="card">
-        <span class="tagline warn">决策 1</span>
-        <h3 style="margin-top:12px">风控判定不能用 HTTP 状态码</h3>
-        <p>大众点评被拦截时<b>返回的仍是 200</b>，不是 4xx/5xx。所以 <code>is_blocked()</code> 用了两个更可靠的判据：</p>
-        <ul style="font-size:14px">
-          <li><b>页面大小</b>：正常列表页约 20 万字符，验证页只有约 5000，差 40 倍；</li>
-          <li><b>关键词</b>：<code>verify</code> / <code>captcha</code> / <code>yoda</code>（美团风控系统内部代号）。</li>
-        </ul>
-        <p>这是整个脚本最有价值的一段，因为它决定了主循环「要不要停下来」。</p>
-      </div>
-
-      <div class="card">
-        <span class="tagline warn">决策 2</span>
-        <h3 style="margin-top:12px">风控用 <code>break</code>，网络失败用 <code>continue</code></h3>
-        <p>两者含义完全不同：</p>
-        <ul style="font-size:14px">
-          <li><code>continue</code>：这一页请求失败（超时/断网），跳过它继续抓下一页，重试可能就好了；</li>
-          <li><code>break</code>：被风控盯上了，<b>必须立刻停</b>——继续请求只会加速封 IP，这是主动止损。</li>
-        </ul>
-        <p>被问到概率很高：它体现的是「知道什么时候该放弃」。</p>
-      </div>
-
-      <div class="card">
-        <span class="tagline">决策 3</span>
-        <h3 style="margin-top:12px">随机限速，而不是固定间隔</h3>
-        <p><code>random.uniform(2, 5)</code> 而不是 <code>sleep(3)</code>：固定间隔太规律，本身就是最明显的爬虫特征。
-        实测 10 页共耗时 42 秒，全程零拦截。</p>
-        <p>顺序上第 1 页不等、第 2 页起才等，避免开局无谓延迟。</p>
-      </div>
-
-      <div class="card">
-        <span class="tagline">决策 4</span>
-        <h3 style="margin-top:12px">整个请求包在 <code>try</code> 里</h3>
-        <p>网络是最容易出错的环节。不加 <code>try</code>，一次超时就会让程序整体崩掉，<b>前面抓好的 9 页也白费</b>。
-        加上之后：出错打印一行、返回空串、主循环 <code>continue</code>。</p>
-        <p><code>errors="replace"</code> 是同类思路：解不出的字符用占位符代替，不让编码问题中断流程。</p>
-      </div>
-
-      <div class="card">
-        <span class="tagline">决策 5</span>
-        <h3 style="margin-top:12px"><code>utf-8-sig</code>：一个真实踩过的坑</h3>
-        <p>Windows 记事本保存 UTF-8 时会在文件头加一个不可见的 BOM。带着它去发网络请求会直接
-        <code>UnicodeEncodeError</code>。用 <code>utf-8-sig</code> 读，BOM 会被自动吃掉。</p>
-        <p>这个细节不算「技术含量」，但它是真跑过 Windows 才会遇到的，讲出来可信度很高。</p>
-      </div>
-
-      <div class="card">
-        <span class="tagline teal">决策 6</span>
-        <h3 style="margin-top:12px">一个探针，替全组省了一天</h3>
-        <p><code>have_font_encryption()</code> 用正则数网页里 <code>&amp;#xe1a3;</code> 这类实体。
-        大众点评曾用私有字体把店名渲染成乱码，若存在，就必须先写字体解密。</p>
-        <p><b>实测结果 0 个</b> → 页面是明文 → 成员 2 不需要写 <code>font_decode.py</code>。
-        成员 2 的解析脚本里也保留了一个同样的探针做交叉验证。</p>
-      </div>
+    <div class="tbox">
+      <table class="tb">
+        <thead>
+          <tr>
+            <th style="width:120px">字段</th>
+            <th style="width:310px">提取方式</th>
+            <th style="width:210px">样例</th>
+            <th>坑</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>shop_id</code></td><td><code>data-shopid="([A-Za-z0-9]+)"</code></td><td><code>k6ASsfEU2GWeDmTk</code></td><td>卡片唯一锚点，先锁它再取别的</td></tr>
+          <tr><td><code>name</code></td><td><code>&lt;h4&gt;(.*?)&lt;/h4&gt;</code></td><td>浩海火烧云傣家菜（京广店）</td><td>全页 190 个 h4，只有 150 个是店名</td></tr>
+          <tr><td><code>rating</code></td><td><code>class="star star_(\d+)"</code> 除以 10</td><td><code>star_45</code> 得 4.5</td><td>评分只写在 CSS 类名里</td></tr>
+          <tr><td><code>review_count</code></td><td><code>&lt;b&gt;([\d,]+)&lt;/b&gt;\s*条评价</code></td><td><code>42,277</code> 得 42277</td><td>带千分位逗号，先去掉</td></tr>
+          <tr><td><code>avg_price</code></td><td><code>人均\s*&lt;b&gt;[￥¥](\d+)&lt;/b&gt;</code></td><td>103</td><td>全角半角两个符号都要收</td></tr>
+          <tr><td><code>category</code></td><td>第一个 <code>span.tag</code></td><td>云南菜\|滇菜</td><td>复合标签原样保留</td></tr>
+          <tr><td><code>district</code></td><td>第二个 <code>span.tag</code></td><td>朝阳公园/团结湖</td><td>是商圈不是行政区</td></tr>
+        </tbody>
+      </table>
     </div>
+
+    <p style="margin-top:24px;font-size:14px;color:var(--ink-3);max-width:74ch">
+      开工第一件事是确认哪些东西不存在：页面里没有 <code>__NEXT_DATA__</code> 数据岛，没有 JSON-LD，也没有月售字段。
+      是纯服务端渲染的 HTML，所以只能用正则。这个判断同时决定了后面「客流量维度」的结局。
+    </p>
   </div>
 </section>
 
-<section class="tint">
+<section class="section">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">成员 2 · 解析</div>
-      <h2>五个坑，全部写进了注释</h2>
-      <p>解析的难点不在正则本身，而在于「看起来对、其实错了」——这类错误不报错，只静默产出脏数据。</p>
+    <div class="h2blk">
+      <div class="rule"></div>
+      <h2>采集：六处判断</h2>
+      <p>这段代码本身不复杂，难的是怎么不被封。</p>
     </div>
 
-    <div class="tbl-wrap">
-      <table class="tbl">
+    <dl class="kv">
+      <dt>风控判定</dt>
+      <dd>被拦截时服务端返回的仍是 200，靠状态码判断会完全失效。改成两个内容判据：页面大小（正常页约 20 万字符，验证页约 5000）与关键词（verify、captcha、yoda，最后一个是美团风控的内部代号）。</dd>
+
+      <dt>停还是跳过</dt>
+      <dd>网络失败用 <code>continue</code>，跳过这页继续下一页，重试可能就好了；识别到风控用 <code>break</code>，立刻整体停下。被盯上之后越请求越糟，这是主动止损。</dd>
+
+      <dt>限速</dt>
+      <dd><code>random.uniform(2, 5)</code> 而不是固定 3 秒。固定间隔本身就是最好认的机器特征。实测十页共 42 秒，零拦截。</dd>
+
+      <dt>异常边界</dt>
+      <dd>整个请求包在 <code>try</code> 里。不加的话一次超时就会让程序整体崩掉，前面九页白抓。解码用 <code>errors="replace"</code>，同一个思路。</dd>
+
+      <dt>BOM</dt>
+      <dd>Windows 记事本保存 UTF-8 时会在文件头加一个不可见字符，带着它发请求会直接报 <code>UnicodeEncodeError</code>。用 <code>utf-8-sig</code> 读就没事。这是真踩过的坑。</dd>
+
+      <dt>字体探针</dt>
+      <dd>用正则数页面里 <code>&amp;#xe1a3;</code> 这类实体。大众点评以前用私有字体把店名渲染成乱码，若存在就必须先写解密。实测 0 个，所以解析那边不用写解密程序，省下大约一天。</dd>
+    </dl>
+  </div>
+</section>
+
+<section class="section band">
+  <div class="wrap">
+    <div class="h2blk">
+      <div class="rule"></div>
+      <h2>解析：五个坑</h2>
+      <p>解析难的不是正则，是「看着对、其实错了」。这类错误不报错，只安静地产出脏数据。</p>
+    </div>
+
+    <div class="tbox">
+      <table class="tb">
         <thead>
-          <tr><th style="width:44px">#</th><th style="width:210px">坑</th><th style="width:290px">现象</th><th>解法</th></tr>
+          <tr><th style="width:40px">#</th><th style="width:200px">坑</th><th style="width:300px">现象</th><th>解法</th></tr>
         </thead>
         <tbody>
           <tr>
-            <td class="n">1</td><td><b><code>&lt;h4&gt;</code> 不止 15 个</b></td>
-            <td>每页实际 19 个：15 个店名 ＋ 4 个固定标签（<code>分类:</code> <code>地点:</code> 两个筛选栏，加上页尾 <code>商户没有被收录？</code> <code>遇到什么问题？</code>）</td>
-            <td>先用 <code>data-shopid</code> 锁定卡片，只在卡片内部找 <code>&lt;h4&gt;</code>。直接提取会多出 40 条脏数据</td>
+            <td class="n">1</td><td class="name">h4 不止 15 个</td>
+            <td>每页 19 个：15 个店名，加 4 个固定标签（筛选栏的「分类」「地点」，页尾的「商户没有被收录」「遇到什么问题」）</td>
+            <td>先用 <code>data-shopid</code> 锁卡片，再在卡片内找 h4。直接提取会多出 40 条脏数据</td>
           </tr>
           <tr>
-            <td class="n">2</td><td><b>评分只存在于 CSS 类名</b></td>
-            <td>页面里搜不到「4.5 分」这几个字，只有 <code>class="star star_45 star_sml"</code></td>
-            <td>正则取 <code>star_</code> 后的数字 ÷ 10。全页仅 4 种取值：<code>star_50</code> / <code>star_45</code> / <code>star_40</code> / <code>star_35</code></td>
+            <td class="n">2</td><td class="name">评分只存在于类名</td>
+            <td>页面里搜不到「4.5 分」这几个字，只有 <code>star star_45 star_sml</code></td>
+            <td>取 <code>star_</code> 后的数字除以 10。全样本只有 star_50、star_45、star_40、star_35 四种</td>
           </tr>
           <tr>
-            <td class="n">3</td><td><b>评论数带千分位逗号</b></td>
+            <td class="n">3</td><td class="name">评论数带逗号</td>
             <td><code>&lt;b&gt;42,277&lt;/b&gt; 条评价</code></td>
-            <td><code>int()</code> 之前先 <code>.replace(",", "")</code>，可用正则 <code>[\d,]+</code> 一把抓</td>
+            <td><code>int()</code> 之前先去掉逗号，正则用 <code>[\d,]+</code> 一次抓全</td>
           </tr>
           <tr>
-            <td class="n">4</td><td><b>人均用全角 ￥</b></td>
+            <td class="n">4</td><td class="name">人均是全角 ￥</td>
             <td><code>人均 &lt;b&gt;￥103&lt;/b&gt;</code></td>
-            <td>字符组 <code>[￥¥]</code> 同时兼容全角与半角</td>
+            <td>字符组 <code>[￥¥]</code> 两个都收</td>
           </tr>
           <tr>
-            <td class="n">5</td><td><b>切块尾部串到下一张卡片</b></td>
-            <td>按 <code>&lt;div class="txt"&gt;</code> 切分后，块尾会带上下一张卡片的图片区，而图片区的 <code>&lt;a&gt;</code> 上也挂 <code>data-shopid</code></td>
-            <td>入口加一行 <code>block = block.split("&lt;/li&gt;")[0]</code>，把块边界收紧到卡片边界。加固前后输出 SHA-256 完全一致（<code>faf7f489…</code>）</td>
+            <td class="n">5</td><td class="name">切块串到下一张卡片</td>
+            <td>按 <code>div.txt</code> 切分后，块尾会带上下一张卡片的图片区，而图片区的 a 标签上也有 <code>data-shopid</code></td>
+            <td>入口加一行 <code>block.split("&lt;/li&gt;")[0]</code>，把块边界收到卡片边界。加固前后输出 SHA-256 完全一致</td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <div class="grid-2" style="margin-top:20px">
-      <div class="note teal">
-        <span class="tag">为什么第 5 个坑最危险</span>
-        <p>当前 150 家的字段全部有值，所以这个 bug 没有暴露。但只要某家店本身缺评论数或人均，
-        正则就会<b>静默取到下一家店的值</b>——错得毫无痕迹，比抛异常危险得多。
-        这类「沉默的错误」是数据工程里最贵的一类问题。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:26px">
+      <div>
+        <p style="font-size:14.5px">
+          第五个坑最危险。当前 150 家字段全有值，所以这个 bug 没暴露出来。
+          但只要某家店本身缺评论数或人均，正则就会安静地取到下一家店的值，错得没有痕迹。
+          数据工程里最贵的往往就是这类沉默的错误。
+        </p>
       </div>
-      <div class="note gold">
-        <span class="tag">怎么证明解析是对的</span>
-        <p>用<b>一条完全不同的解析路径</b>重抽了一遍：<code>&lt;div class="txt"&gt;</code> vs <code>&lt;li&gt;</code> 边界切块、
-        <code>data-shopid</code> vs <code>data-click-name</code> 定位、<code>&lt;h4&gt;</code> vs 锚点 <code>title</code> 取名。
-        两条路径在 <b>900 个字段值上完全一致，差异 0 个</b>。</p>
+      <div>
+        <p style="font-size:14.5px">
+          验证用了另一条完全不同的路径重抽一遍：按 li 边界切块、用 data-click-name 定位、从锚点 title 取名。
+          两条路在 900 个字段值上完全一致，差异 0 个。这不是同一份代码跑两次。
+        </p>
       </div>
     </div>
   </div>
 </section>
 
-<section>
+<section class="section">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">成员 3 · 建模</div>
-      <h2>六个工程点，让口径可校验、可回滚</h2>
-      <p>建模脚本的价值不在算法复杂度（加权求和而已），而在于让「口径」变成一件可以当场改、可以复现、可以追溯的事。</p>
+    <div class="h2blk">
+      <div class="rule"></div>
+      <h2>建模：六处工程</h2>
+      <p>加权求和本身没什么算法含量，这一段的重点是让口径变成能当场改、能复现、能追溯的东西。</p>
     </div>
 
-    <div class="grid-2">
-      <div class="card">
-        <span class="tagline warn">工程点 1</span>
-        <h3 style="margin-top:12px">权重硬校验：写错就报错，不静默</h3>
-        <p><code>scoring.yaml</code> 里两项权重合计必须等于 1.0。写成 <code>0.625 + 0.35 = 0.975</code>，
-        脚本启动时直接报错退出并提示正确口径——而不是算出一张偏移了 2.5% 的榜单让人毫无察觉。</p>
-        <p>这是「配置文件比硬编码更安全」的实证：硬编码改错不会有人校验，配置化之后校验点只有一个，也只需要一处。</p>
-      </div>
+    <dl class="kv">
+      <dt>权重硬校验</dt>
+      <dd>两项权重合计必须等于 1.0。写成 0.625 加 0.35，脚本启动就报错退出，不会算出一张偏了 2.5% 的榜。配置化之后校验点只有一个，也就只需要写一处。</dd>
 
-      <div class="card">
-        <span class="tagline warn">工程点 2</span>
-        <h3 style="margin-top:12px">三级排序兜底，保证可复现</h3>
-        <p>排序键是 <code>(-final_score, -rating, -review_count, name)</code>。前三级处理同分，
-        最后一级用店名做最终裁决。</p>
-        <p>为什么需要：Python 的排序是稳定的，但<b>如果输入顺序变了</b>（比如换了文件遍历顺序），同分店的先后就会变。
-        加上全序键之后，任何人重跑两次 <code>top100.csv</code> 的 SHA 完全相同。</p>
-      </div>
+      <dt>三级排序</dt>
+      <dd>排序键是分数、评分、评论数、店名四级。前三级处理同分，最后用店名裁决。Python 的排序是稳定的，但输入顺序一变，同分店的先后就会变。加上全序键之后，任何人重跑两次的 CSV 哈希都一样。</dd>
 
-      <div class="card">
-        <span class="tagline">工程点 3</span>
-        <h3 style="margin-top:12px">自己写四十行 YAML 解析器</h3>
-        <p>为了保持零依赖，只实现最简子集：<code>键: 值</code>、两空格缩进、<code>#</code> 注释。
-        够用，而且行为完全可控。</p>
-        <p>顺带解决了另一个问题：<code>#</code> 注释里可以写大段中文论证（为什么门槛是 2000、为什么权重是 0.625），
-        配置文件和报告论证放在一处，不会出现文档与实现对不上。</p>
-      </div>
+      <dt>自写 YAML</dt>
+      <dd>为了保持零依赖，只实现键值、两空格缩进、井号注释这个子集。顺带解决另一个问题：注释里可以写大段中文论证，配置和理由放在一起，不会出现文档与实现对不上。</dd>
 
-      <div class="card">
-        <span class="tagline">工程点 4</span>
-        <h3 style="margin-top:12px">品牌限额是独立函数，可一键关掉</h3>
-        <p><code>dedupe_by_brand(sorted_rows, cap, top_n)</code>：按排序结果遍历，每个品牌计数，
-        达到 <code>cap</code> 就跳过；<code>cap=0</code> 表示不限。</p>
-        <p>做成独立函数而不是塞进排序逻辑，是为了让 <code>--compare</code> 能干净地「只改一个变量」，
-        也让答辩时能当场把这一刀关掉给老师看榜单怎么变。</p>
-      </div>
+      <dt>品牌去重</dt>
+      <dd>做成独立函数，<code>cap=0</code> 表示不限。这样 <code>--compare</code> 能干净地只改一个变量，也能当场把这一刀关掉看榜单怎么变。</dd>
 
-      <div class="card">
-        <span class="tagline">工程点 5</span>
-        <h3 style="margin-top:12px">三种输出，其中 SQLite 存口径快照</h3>
-        <p>CSV 给人看、JSON 给前端、SQLite 给查询。<code>meta</code> 表里存了权重、归一化方式、筛选参数、生成时间。</p>
-        <p>作用：任何一份 <code>dianping.db</code> 都能回答「这张榜是哪套参数算出来的」。
-        没有这个快照，参数改过之后旧榜单就没法解释了。</p>
-      </div>
+      <dt>三种输出</dt>
+      <dd>CSV 给人看，JSON 给前端，SQLite 给查询。数据库的 meta 表存了权重、归一化方式、筛选参数和生成时间，任何一份 db 都能回答「这张榜是哪套参数算出来的」。</dd>
 
-      <div class="card">
-        <span class="tagline teal">工程点 6</span>
-        <h3 style="margin-top:12px">不动上游文件，另开一张表</h3>
-        <p>菜系标签需要给 150 家都打上，但<b>不能</b>加进 <code>restaurants_clean.csv</code>——
-        那份文件「重跑字节级一致（SHA <code>faf7f489…</code>）」是成员 2 的验证结论，加一列就破坏了。</p>
-        <p>所以走新建 <code>data/cuisine_full.csv</code> 这条路。<b>尊重上游的契约，是流水线能分开重跑的前提。</b></p>
-      </div>
-    </div>
+      <dt>不动上游</dt>
+      <dd>菜系标签要给 150 家都打上，但不能加进 <code>restaurants_clean.csv</code>，因为那份文件「重跑字节级一致」是解析那边的验证结论，加一列就破坏了。所以另建了一张 <code>cuisine_full.csv</code>。</dd>
+    </dl>
   </div>
 </section>
 
-<section class="tint">
+<section class="section band">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">答辩速查</div>
-      <h2>最可能被问到的 16 个问题</h2>
-      <p>答案都写在这里，点开即可。按采集 6 问、解析 5 问、建模 5 问排列。</p>
+    <div class="h2blk">
+      <div class="rule"></div>
+      <h2>实现上的十六个问题</h2>
+      <p>按采集 6 条、解析 5 条、建模 5 条排列。点开就能看。</p>
     </div>
 
-    <div class="qa-count">采集 · 成员 1</div>
+    <div class="qa">
+      <details>
+        <summary>不带 Cookie 会怎样</summary>
+        <div class="ans"><p>会被 302 跳到 <code>verify.meituan.com</code> 的验证中心，抓到的内容没法解析。带上登录态 Cookie 之后就返回约 20 万字符的正常列表页。所以采集必须带登录态，而 Cookie 会过期。</p></div>
+      </details>
+      <details>
+        <summary>为什么风控判定不看状态码</summary>
+        <div class="ans"><p>因为被拦截时返回的仍然是 200。状态码正常、内容却是验证页，这条路直接走不通。改用页面大小加关键词两个内容层判据。</p></div>
+      </details>
+      <details>
+        <summary>为什么被拦截用 break，网络失败用 continue</summary>
+        <div class="ans"><p>两类失败性质不同。网络失败是暂时的，跳过这页继续下一页是合理的；风控拦截意味着已经被盯上，继续请求只会加重，最后封 IP。</p></div>
+      </details>
+      <details>
+        <summary>为什么要 sleep，为什么用随机值</summary>
+        <div class="ans"><p>限速既是对服务器的基本礼貌，也是最省事的反爬对策。用随机值是因为固定间隔太规律，本身就是特征。实测十页 42 秒，零拦截。</p></div>
+      </details>
+      <details>
+        <summary>为什么不用 requests</summary>
+        <div class="ans"><p>为了让队友不用配环境就能跑。requests 要 pip 安装，urllib 自带。本项目只有 10 页、约 2 MB，标准库够用。这是主动取舍，不是能力限制。</p></div>
+      </details>
+      <details>
+        <summary>程序中途断了怎么办</summary>
+        <div class="ans"><p>已抓的页面都在盘上，重跑会新建日期文件夹，不覆盖旧的。脚本只读不写，重复运行没有副作用。</p></div>
+      </details>
 
-    <details class="q"><summary>不带 Cookie 会怎样？怎么发现必须带登录态的？</summary>
-      <div class="a"><p>不带 Cookie 直接访问，会被 302 跳到 <code>verify.meituan.com</code> 的验证中心页面，抓到的内容完全没法解析。
-      带上浏览器登录后的 Cookie，就返回约 20 万字符的正常列表页。所以正式采集必须带登录态，且 Cookie 会过期，需要定期更新。</p></div>
-    </details>
+      <details>
+        <summary>为什么不需要字体解密</summary>
+        <div class="ans"><p>大众点评历史上把店名渲染成 <code>&amp;#xe1a3;</code> 这类实体，那样必须先建码位到字符的映射表。现在实测实体数为 0，店名是明文 h4，评分在类名里，评论数和人均是明文 b 标签。两个脚本各放了一个探针，结果一致，所以 font_decode.py 被废弃了。</p></div>
+      </details>
+      <details>
+        <summary>评分是怎么解析出来的</summary>
+        <div class="ans"><p>评分不在文本里，在 CSS 类名：<code>star_45</code> 表示 4.5 分。这是前端用背景图渲染星星的常见写法。取数字除以 10 就行。</p></div>
+      </details>
+      <details>
+        <summary>怎么保证解析出来的数据是对的</summary>
+        <div class="ans"><p>三层。第一层可复现：重跑生成的 CSV 与原文件逐字节一致。第二层独立实现交叉验证：换切块方式、定位锚点、取名来源重抽一遍，900 个字段值差异 0 个。第三层源头审计：页面数 10、卡片数 150、h4 总数 190、字体实体 0，全部与预期吻合。</p></div>
+      </details>
+      <details>
+        <summary>站点改版了会不会崩</summary>
+        <div class="ans"><p>有两层保护。所有正则集中在文件顶部的解析规则区，改版只改那一段；字段提取失败返回 None 而不抛异常，程序不崩，但质量报告里的完整率会立刻掉下来，能被看见。</p></div>
+      </details>
+      <details>
+        <summary>解析这一段的价值在哪</summary>
+        <div class="ans"><p>输出里带了一份数据体检报告：字段完整率、取值范围、评分分布、门槛检查。评分分布那一项直接改变了项目走向：150 家里 79 家满分，说明评分维度区分度极低，这才有了后面双维度权重的讨论。</p></div>
+      </details>
 
-    <details class="q"><summary>为什么风控判定不看 HTTP 状态码？</summary>
-      <div class="a"><p>因为被拦截时服务端返回的<b>仍然是 200</b>。状态码正常、内容却是验证页，靠状态码判断会完全失效。
-      改用两个内容层判据：页面大小（20 万 vs 5000，差 40 倍）和关键词（<code>verify</code> / <code>captcha</code> / <code>yoda</code>）。</p></div>
-    </details>
-
-    <details class="q"><summary>为什么被拦截要用 <code>break</code> 而不是 <code>continue</code>？</summary>
-      <div class="a"><p>两类失败的性质不同。网络失败是暂时的，跳过这一页继续抓下一页是合理的；
-      风控拦截是「已经被盯上」，继续请求只会加重，最终封 IP。所以必须立刻整体停止，这是主动止损。</p></div>
-    </details>
-
-    <details class="q"><summary>为什么要 sleep？为什么用随机值？</summary>
-      <div class="a"><p>限速既是对服务器的基本礼貌，也是最有效的反爬对策之一。用 <code>random.uniform(2, 5)</code> 而不是固定 3 秒，
-      是因为固定间隔本身就是极强的机器特征。实测 10 页耗时 42 秒，零拦截。</p></div>
-    </details>
-
-    <details class="q"><summary>为什么只用标准库，不用 requests？</summary>
-      <div class="a"><p>为了让队友<b>不用配环境就能跑</b>。<code>requests</code> 需要 pip 安装，<code>urllib</code> 是自带的。
-      本项目的数据量（10 页 / 2 MB）标准库完全够用。这是主动的工程取舍，不是能力限制。</p></div>
-    </details>
-
-    <details class="q"><summary>程序中途断了怎么办？数据会丢吗？</summary>
-      <div class="a"><p>不会。已抓的页面都已落盘在 <code>raw/&lt;日期&gt;/pageNN/index.html</code>，重跑会新建日期文件夹，不会覆盖。
-      而且脚本只读取网站、不写入任何东西，重复运行没有副作用。</p></div>
-    </details>
-
-    <div class="qa-count" style="margin-top:30px">解析 · 成员 2</div>
-
-    <details class="q"><summary>为什么不需要字体解密？</summary>
-      <div class="a"><p>大众点评历史上曾用私有字体把店名渲染成 <code>&amp;#xe1a3;</code> 这类实体，那样必须先建「码位 → 真实字符」的映射表。
-      实测当前页面<b>字体加密实体数为 0</b>，店名是明文 <code>&lt;h4&gt;</code>。两个脚本各放了一个探针，结果一致，
-      因此 <code>font_decode.py</code> 被废弃，省下约一天工作量。</p></div>
-    </details>
-
-    <details class="q"><summary>评分是怎么解析出来的？</summary>
-      <div class="a"><p>评分不在文本里，而在 CSS 类名：<code>star_45</code> 表示 4.5 分。这是前端用背景图渲染星星的常见做法。
-      取 <code>star_</code> 后的数字 ÷ 10。全样本只有 <code>star_50</code>(79) / <code>star_45</code>(46) / <code>star_40</code>(24) / <code>star_35</code>(1) 四种。</p></div>
-    </details>
-
-    <details class="q"><summary>你怎么保证解析出来的数据是对的？</summary>
-      <div class="a"><p>三层验证。<b>第一层</b>可复现：重跑生成的 CSV 与原文件逐字节一致（SHA-256 <code>faf7f489…</code>）。
-      <b>第二层</b>独立实现交叉验证：换一套切块方式、定位锚点、取名来源重抽一遍，900 个字段值差异 0 个。
-      <b>第三层</b>源头审计：页面数 10、卡片数 150、<code>&lt;h4&gt;</code> 总数 190、字体实体 0，全部与预期吻合。</p></div>
-    </details>
-
-    <details class="q"><summary>如果大众点评改版了，脚本会不会崩？</summary>
-      <div class="a"><p>两层保护。① 所有正则集中在文件顶部的「第 1 部分：解析规则」，改版只需要改那一段；
-      ② 字段提取失败返回 <code>None</code> 而不抛异常，程序不崩，但质量报告里的完整率会立刻掉下来，能被发现。
-      另外脚本有字体加密检查，若站点改回加密，会明确报错并提示启用解密，而不是静默输出乱码。</p></div>
-    </details>
-
-    <details class="q"><summary>你做的产品是「数据搬运」，价值在哪？</summary>
-      <div class="a"><p>输出里带了一份<b>数据体检报告</b>：字段完整率、取值范围、评分分布、门槛检查。
-      其中「评分分布」这一项直接改变了项目走向——150 家里 79 家满分，说明评分维度区分度极低，
-      这促成了双维度权重的讨论；「评论数 &lt; 100 的门店有 0 家」则说明原设门槛 <code>min_threshold=100</code> 实际不起作用，
-      必须上调（最终定为 2000）。这是解析环节对建模环节的实际影响。</p></div>
-    </details>
-
-    <div class="qa-count" style="margin-top:30px">建模 · 成员 3</div>
-
-    <details class="q"><summary>权重 0.625 / 0.375 是怎么定的？为什么不是 0.5 / 0.5？</summary>
-      <div class="a"><p>它不是新拍的数，而是<b>原设计等比分配的结果</b>：原方案是评分 0.50 / 评论 0.30 / 客流量 0.20，
-      客流维度因数据源不存在被删除后，剩下两项按原 5:3 比例放大到合计 1.0：<code>0.50 ÷ 0.80 = 0.625</code>，
-      <code>0.30 ÷ 0.80 = 0.375</code>。</p>
-      <p>选 0.5/0.5 也可以，但那样就失去了与原设计比例关系的可追溯性。实测改 0.5/0.5 只换 4 家，差别不大——
-      <b>但这不等于可以随便填，因为权重写错必须能被发现，所以才有硬校验</b>。</p></div>
-    </details>
-
-    <details class="q"><summary>为什么不把人均价格加进模型？</summary>
-      <div class="a"><p>因为 <code>ln(评论数)</code> 与人均价格的相关系数是 <b>-0.42</b>：评论多的店普遍更便宜。
-      把人均加进去会和评论数互相打架，并且<b>系统性惩罚高端店</b>——贵店天然评论少，会被双重扣分。
-      这是主动排除，不是遗漏。</p></div>
-    </details>
-
-    <details class="q"><summary>为什么不用贝叶斯收缩评分？那个能显著改善榜单。</summary>
-      <div class="a"><p>能，但它会把两个维度合并成一个数，报告里就没有「双维度权重」这一节了。
-      更重要的是：贝叶斯收缩解决的是「评论数少导致评分不稳定」的问题，而本数据集的评论数最少也有 1384 条，
-      <b>这个问题并不存在</b>。为一个不存在的问题引入一个解释成本很高的方法，得不偿失。</p></div>
-    </details>
-
-    <details class="q"><summary>你怎么保证榜单可复现？</summary>
-      <div class="a"><p>三级排序兜底键 <code>(-final_score, -rating, -review_count, name)</code> 保证同分店有确定的先后，
-      不依赖文件遍历顺序；连跑两次 <code>top100.csv</code> 的 SHA 完全相同。
-      另外本站在构建阶段用等价实现重算了一遍，名次 100/100 一致，<code>final_score</code> 最大误差 5×10⁻⁷。</p></div>
-    </details>
-
-    <details class="q"><summary>Top100 里有几家是「同一个牌子的不同门店」？</summary>
-      <div class="a"><p><b>零家。</b>因为加了品牌限额 <code>max_per_brand = 1</code>，100 个榜位对应 100 个品牌。
-      如果不加限额，100 个榜位只有 85 个品牌，四季民福一家占 6 席。
-      这是一个明确的干预，代价有几家高分门店被挤出，收益是榜单呈现的是「100 个品牌」而不是「20 个连锁品牌的旗舰店」。
-      局限声明第 6 条写明了这一点。</p></div>
-    </details>
+      <details>
+        <summary>权重 0.625 与 0.375 是怎么定的</summary>
+        <div class="ans"><p>不是新拍的数。原方案是评分 0.50、评论 0.30、客流 0.20，客流维度删掉之后，剩下两项按原 5:3 比例放大到合计 1.0：0.50 除以 0.80 得 0.625，0.30 除以 0.80 得 0.375。选 0.5 比 0.5 也跑得通，但那样就失去了与原设计比例关系的可追溯性。</p></div>
+      </details>
+      <details>
+        <summary>为什么不把人均价格加进模型</summary>
+        <div class="ans"><p>评论数的对数与人均的相关系数是 -0.42，评论多的店普遍更便宜。加进去会和评论数互相打架，并且系统性惩罚高端店：贵店天然评论少，会被扣两次分。这是主动排除。</p></div>
+      </details>
+      <details>
+        <summary>为什么不用贝叶斯收缩</summary>
+        <div class="ans"><p>它能显著改善评论数少导致评分不稳的问题，但本数据集最低也有 1384 条评论，这个问题并不存在。而且它会把两个维度合并成一个数，「双维度权重」这一节就没了。为一个不存在的问题引入解释成本很高的方法，不划算。</p></div>
+      </details>
+      <details>
+        <summary>怎么保证榜单可复现</summary>
+        <div class="ans"><p>四级排序键保证同分店有确定先后，不依赖文件遍历顺序；连跑两次 top100.csv 的 SHA 相同。本站的构建脚本还用等价实现重算了一遍，名次 100/100 一致，final_score 最大误差 5×10⁻⁷。</p></div>
+      </details>
+      <details>
+        <summary>Top100 里有几家是同一个牌子的门店</summary>
+        <div class="ans"><p>零家。品牌限额是每家 1 席，100 个榜位对应 100 个品牌。不加限额的话 100 个榜位只有 85 个品牌，四季民福一家占 6 席。这是明确的干预，代价写在口径页的局限里。</p></div>
+      </details>
+    </div>
   </div>
 </section>
 
-<section>
-  <div class="wrap wrap-narrow">
-    <div class="sec-head">
-      <div class="kicker">复现</div>
-      <h2>三条命令跑完全程</h2>
+<section class="section">
+  <div class="wrap narrow">
+    <div class="h2blk">
+      <div class="rule"></div>
+      <h2>三条命令跑完</h2>
     </div>
     <div class="formula">
       <div class="eq">
-<span style="color:#6E7883"># 1. 采集（需要先把浏览器 Cookie 存成 cookie.txt）</span>
+<span style="color:#8A94A0"># 采集，需要先把浏览器 Cookie 存成 cookie.txt</span>
 python crawler.py
 
-<span style="color:#6E7883"># 2. 解析（读 raw/，写 data/restaurants_clean.csv）</span>
+<span style="color:#8A94A0"># 解析，读 raw/，写 data/restaurants_clean.csv</span>
 python parser.py
 
-<span style="color:#6E7883"># 3. 建模（写 top100.csv / .json / dianping.db）</span>
+<span style="color:#8A94A0"># 建模，写 top100.csv 与 JSON、SQLite</span>
 python build_ranking.py
-<span style="color:#6E7883">#    口径对照实验（答辩演示用）</span>
-python build_ranking.py --compare
       </div>
-      <div class="hint">三个脚本都只依赖 Python 标准库，无需 <code>pip install</code>。若现场网络不可用，
-      直接从第 2 步开始即可：<code>raw/2026-10-15/</code> 已落盘，解析与建模不联网、结果确定。</div>
-    </div>
-    <div class="note" style="margin-top:20px">
-      <span class="tag">演示保底方案</span>
-      <p>答辩现场最大的风险是网络与 Cookie 有效期。保底做法：<b>不跑采集</b>，直接打开
-      <code>raw/2026-10-15/page01/index.html</code> 展示原始页面，然后跑 <code>python parser.py</code> 生成 CSV、
-      <code>python build_ranking.py</code> 出榜。这两步不联网、结果确定，效果与全流程一致。</p>
+      <div class="hint">三个脚本都只依赖标准库。网络不可用时可以从第二步开始：<code>raw/2026-10-15/</code> 已经落盘，解析与建模不联网，结果确定。</div>
     </div>
   </div>
 </section>
 
 </main>
 
-<footer>
-  <div class="wrap row">
-    <span><b>北京餐厅 Top100</b> · 大众点评数据流水线</span>
-    <span>数据采集 <b>2026-10-15</b></span>
-    <span>仅用于课程研究，不公开分发</span>
-    <span class="sep"></span>
-    <span>页面不含任何 Cookie / 代理凭据</span>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <span><b>北京餐厅 Top100</b></span>
+    <span>采集 2026-10-15</span>
+    <span>仅用于课程研究，不对外分发</span>
+    <span class="sp"></span>
+    <span>页面不含 Cookie 与代理凭据</span>
     <span>© <span id="year">2026</span></span>
   </div>
 </footer>
 
-<script src="assets/data.js?v=2"></script>
-<script src="assets/code.js?v=2"></script>
-<script src="assets/app.js?v=2"></script>
+<script src="assets/data.js?v=3"></script>
+<script src="assets/code.js?v=3"></script>
+<script src="assets/app.js?v=3"></script>
 </body>
 </html>
