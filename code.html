@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>代码 · 北京餐厅 Top100</title>
 <meta name="description" content="采集、解析、建模三个脚本的完整源码与实现取舍。">
-<link rel="stylesheet" href="assets/base.css?v=4">
+<link rel="stylesheet" href="assets/base.css?v=5">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%231B4B72'/><text x='16' y='23' font-size='17' font-family='Georgia,serif' font-weight='700' fill='white' text-anchor='middle'>京</text></svg>">
 </head>
 <body data-page="code" data-code-default="crawler">
@@ -31,6 +31,12 @@
       <p class="lede">
         整条链路三个 Python 文件，共 1464 行，只用标准库。连 YAML 都是自己写的四十行解析器，
         谁把仓库拉下来都不用配环境。下面对应的复杂度和代码技巧无关，都在反爬、解析容错和口径校验这三件事上。
+      </p>
+      <p class="en">
+        Three Python files, 1,464 lines, standard library only. Even the YAML reader is
+        hand-written in about forty lines, so the repository runs anywhere without setup.
+        The difficulty here is not clever code; it is anti-scraping, tolerant parsing and
+        a scoring config that refuses to be silently wrong.
       </p>
     </div>
     <div class="sheet">
@@ -74,6 +80,9 @@
       <div class="rule"></div>
       <h2>两个人的接口只有一张表</h2>
       <p>采集不关心数据怎么用，解析不联网，建模不碰原始 HTML。三者之间的约定就是字段名、提取方式、样例值。</p>
+      <p class="en">The collector does not care how the data is used, the parser never touches the
+        network, and the ranking step never sees raw HTML. Their entire contract is this table of
+        field names, extraction rules and sample values.</p>
     </div>
 
     <div class="tbox">
@@ -340,8 +349,8 @@ python build_ranking.py
   </div>
 </footer>
 
-<script src="assets/data.js?v=4"></script>
-<script src="assets/code.js?v=4"></script>
-<script src="assets/app.js?v=4"></script>
+<script src="assets/data.js?v=5"></script>
+<script src="assets/code.js?v=5"></script>
+<script src="assets/app.js?v=5"></script>
 </body>
 </html>
