@@ -384,6 +384,7 @@ pre.code .t-op { color: #A6AFBA; }
   margin: 14px 0 0;
 }
 .en b { color: var(--ink-2); font-weight: 700; }
+.en.sub { font-size: 13.5px; margin-top: 10px; }
 .head .en { margin-top: 16px; }
 
 /* ------------------------------------------------------------------ 地图 */
@@ -423,13 +424,13 @@ pre.code .t-op { color: #A6AFBA; }
 }
 .heat i.me.hidden { display: none; }
 
-/* 路线层：同样用 DOM 叠加，跟着视图走 */
-.heatline { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
-.heatline .route {
-  fill: none; stroke: #1B4B72; stroke-width: 3.5;
-  stroke-linecap: round; stroke-linejoin: round;
-  paint-order: stroke; filter: drop-shadow(0 0 2px rgba(255,255,255,.9));
+/* 路线：交给腾讯地图 URI，本页只放一个链接 */
+.routelink {
+  display: inline-flex; align-items: center; height: 32px; padding: 0 14px;
+  border: 1px solid var(--blue); border-radius: 6px;
+  color: var(--blue); font-size: 13px; text-decoration: none; background: var(--paper);
 }
+.routelink:hover { background: var(--blue); color: #fff; border-bottom-color: var(--blue); }
 
 /* 热度色标：紫 → 红 */
 .heatlegend { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--ink-3); margin-bottom: 12px; }
@@ -438,14 +439,6 @@ pre.code .t-op { color: #A6AFBA; }
   background: linear-gradient(90deg, rgb(110,63,163) 0%, rgb(160,90,120) 50%, rgb(217,58,50) 100%);
 }
 .mapmsg { font-size: 12px; color: var(--ink-3); line-height: 1.65; padding-bottom: 14px; border-bottom: 1px solid var(--rule-2); margin-bottom: 14px; }
-.routepanel { margin-top: 16px; border-top: 1px solid var(--rule); padding-top: 14px; }
-.rt-sum { font-size: 14px; color: var(--ink-2); margin: 0 0 10px; }
-.rt-sum b { font-family: var(--num); font-size: 21px; color: var(--ink); font-variant-numeric: tabular-nums; }
-.rt-sep { margin: 0 7px; color: var(--ink-4); }
-.rt-mode { float: right; font-size: 12px; color: #1B4B72; border: 1px solid rgba(27,75,114,.3); border-radius: 3px; padding: 1px 6px; }
-.rt-step { display: flex; gap: 8px; font-size: 12px; color: var(--ink-3); padding: 4px 0; line-height: 1.55; }
-.rt-m { flex: none; color: var(--blue); }
-.rt-i { flex: 1; }
 
 .scalebar {
   position: absolute; left: 14px; bottom: 14px; z-index: 3;
@@ -531,7 +524,7 @@ pre.code .t-op { color: #A6AFBA; }
     serviceHost: 'http://127.0.0.1:__WB_HTTP_PORT__/_TMapService/_wbt/__WB_TMAP_SECRET__',
   };
 </script>
-<script src="https://map.qq.com/api/gljs?v=1.exp&libraries=service"></script>
+<script src="https://map.qq.com/api/gljs?v=1.exp"></script>
 </head>
 <body data-page="single" data-code-default="crawler">
 
@@ -601,6 +594,10 @@ pre.code .t-op { color: #A6AFBA; }
         真正改变榜单的是筛选条件。权重从 0.625 换到 0.50 只换 4 家，换到 0.40 换 7 家；
         而把品牌限额从每家 1 席放开，直接换掉 15 家，品牌数从 100 掉到 85。
       </p>
+      <p class="en sub">
+        All three were surprises. Each was a parameter we had set by judgement, and each turned
+        out to be doing something different from what its name suggested.
+      </p>
     </div>
   </div>
 </section>
@@ -663,6 +660,11 @@ pre.code .t-op { color: #A6AFBA; }
       建模那一段是本项目的分水岭。原设计有第三个维度「客流量」，权重占 0.20，
       但平台没有公开月售数据，详页里也搜不到，最后整个维度被删掉，权重按原比例还给前两项。
       这段论证在<a href="#method">口径页</a>，如果只看一处，建议看那里。
+    </p>
+    <p class="en sub">
+      The traffic dimension was not a tuning problem but an availability one: the platform publishes
+      no monthly-sales figure anywhere we could reach, so the dimension was dropped and its 0.20
+      weight redistributed across the other two in proportion.
     </p>
   </div>
 </section>
@@ -823,6 +825,11 @@ pre.code .t-op { color: #A6AFBA; }
           <b>4.0 分及以下的 25 家全部在空心区</b>；5.0 那一列也有空心点，是 11 家被同品牌旗舰店挤掉的满分店，
           其中四季民福另有 3 家、Tomacado 花厨另有 2 家。左上被框住的那个点评论数全站第一，最终排第 41 名。
         </div>
+        <p class="en sub">
+          Rating takes only four values on a list page. Everything left of 4.5 is empty — the 25
+          stores rated 4.0 or below never make the list — while the hollow points inside the 5.0
+          column are the ones crowded out by a same-brand flagship.
+        </p>
       </figure>
 
       <figure class="plate">
@@ -862,6 +869,11 @@ pre.code .t-op { color: #A6AFBA; }
           评分只有四个取值档，区分度确实低，但它在榜单上起的是门槛作用：非满分店的进榜率不到满分店的一半，
           4.0 分及以下直接被清零。把权重压到 0.20，满分店仍占 58 个榜位，说明这道门槛不是权重能调掉的。
         </div>
+        <p class="en sub">
+          The most informative of the six. Rating cannot separate much, but it does sort the list:
+          a store below five stars has less than half the chance of getting in, and anything rated
+          4.0 or below is wiped out entirely.
+        </p>
       </figure>
 
       <figure class="plate">
@@ -875,6 +887,11 @@ pre.code .t-op { color: #A6AFBA; }
           评论数与人均的相关系数是 -0.42，评论多的店普遍更便宜。人均没有进入模型，
           原因就在这里：加进去会和评论数互相打架，并系统性惩罚高端店。
         </div>
+        <p class="en sub">
+          Half the list sits below 150 yuan a head, and nothing below 60. Reviews and price are
+          correlated at -0.42, so adding price to the model would fight the review count and
+          penalise expensive restaurants twice over.
+        </p>
       </figure>
 
     </div>
@@ -902,12 +919,12 @@ pre.code .t-op { color: #A6AFBA; }
           <span><label for="scaleRange">比例</label><input id="scaleRange" type="range" min="0.6" max="1.8" step="0.02" value="1"></span>
           <select id="dPick"><option value="">跳到商圈</option></select>
           <select id="routeMode" aria-label="出行方式">
-            <option value="driving">驾车</option>
+            <option value="drive">驾车</option>
             <option value="transit">公交</option>
-            <option value="walking">步行</option>
-            <option value="biking">骑行</option>
+            <option value="walk">步行</option>
+            <option value="bike">骑行</option>
           </select>
-          <button id="routeGo">规划路线</button>
+          <a id="routeLink" class="routelink" href="#" target="_blank" rel="noopener">在腾讯地图中打开路线</a>
         </div>
 
         <div class="mapstage">
@@ -930,9 +947,8 @@ pre.code .t-op { color: #A6AFBA; }
           <span class="grad"></span>
           <span>少 → 多</span>
         </div>
-        <div class="mapmsg" id="mapMsg">点「定位我」后自动规划到最近的一家，也可点下面的商圈行改目的地。</div>
+        <div class="mapmsg" id="mapMsg">点「定位我」拿到起点，点下面任意商圈设成终点，再点链接跳到腾讯地图看路线。</div>
         <div class="nearby" id="nearbyList"></div>
-        <div class="routepanel" id="routePanel"></div>
       </div>
     </div>
 
@@ -944,7 +960,7 @@ pre.code .t-op { color: #A6AFBA; }
         这张图只能回答「哪个商圈热」，不能回答「这家店在哪」。
       </div>
       <div class="note plain">
-        <b>附近推荐同样按商圈计算。</b>
+        <b>附近推荐与路线交给腾讯地图。</b>
         定位只在本机使用，坐标不出浏览器，也不写入任何存储。
         浏览器给的是 WGS84 坐标，地图用 GCJ-02，两者在北京相差约 500 米，代码里做了一次换算。
       </div>
@@ -1217,11 +1233,21 @@ pre.code .t-op { color: #A6AFBA; }
           但只要某家店本身缺评论数或人均，正则就会安静地取到下一家店的值，错得没有痕迹。
           数据工程里最贵的往往就是这类沉默的错误。
         </p>
+        <p class="en sub">
+          This is the dangerous one. Every field happens to be present in the current sample, so the
+          bug never shows. The moment one store is missing a review count, the regex quietly takes
+          the neighbour's value — and fails silently rather than loudly.
+        </p>
       </div>
       <div>
         <p style="font-size:14.5px">
           验证用了另一条完全不同的路径重抽一遍：按 li 边界切块、用 data-click-name 定位、从锚点 title 取名。
           两条路在 900 个字段值上完全一致，差异 0 个。这不是同一份代码跑两次。
+        </p>
+        <p class="en sub">
+          The second layer re-extracts everything along a different path: split on list-item
+          boundaries, locate by the click attribute, read names from the anchor title. All 900
+          values agree.
         </p>
       </div>
     </div>
@@ -1446,6 +1472,11 @@ python build_ranking.py
       第三道闸门是个明确的人为干预，代价写在局限里：有 11 家满分店被同品牌的旗舰店挤了出去。
       换来的是榜单呈现 100 个品牌，而不是 20 个连锁品牌的旗舰店集合。这一步必须说明，不能当成隐藏规则。
     </div>
+    <p class="en sub">
+      The third gate is a deliberate intervention and its cost is stated: eleven five-star stores are
+      crowded out by a flagship of the same brand. In exchange the list shows a hundred brands
+      instead of a handful of chains.
+    </p>
   </div>
 </section>
 
@@ -1495,6 +1526,11 @@ python build_ranking.py
       <code>shopPowerRate</code>（平台侧总评，口径与列表页星级不同）。按全组决定不纳入模型：
       平台热度值的算法不公开，拿它排序等于把结论外包给平台。记在这里，是为了万一要扩展时方案是现成的。
     </div>
+    <p class="en sub">
+      Those fields exist on the detail page, but we did not use them. The platform popularity score
+      has an undisclosed algorithm, and ranking by it would outsource the conclusion back to the
+      platform. The reason to note them is that the extension path stays ready.
+    </p>
   </div>
 </section>
 
@@ -2467,17 +2503,8 @@ window.CODE_SNIPPETS = {"crawler": {"name": "crawler.py", "lines": 299, "src": "
     me.className = 'me hidden';
     layer.appendChild(me);
 
-    /* 路线层同样走 DOM 叠加：projectToContainer 换算成像素，随视图自动跟随 */
-    var lineSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    lineSvg.setAttribute('class', 'heatline');
-    var routePoly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-    routePoly.setAttribute('class', 'route');
-    lineSvg.appendChild(routePoly);
-    box.appendChild(lineSvg);
-
-    var routePoints = null;
-    var routeFrom = null;
-    var routeTarget = null;
+    var routeFrom = null;   // 用户当前位置（GCJ-02）
+    var routeTarget = null; // 目的地（商圈中心近似坐标）
 
     function place() {
       var zoomK = Math.pow(1.28, (map.getZoom() || 11) - 11.5);
@@ -2496,14 +2523,6 @@ window.CODE_SNIPPETS = {"crawler": {"name": "crawler.py", "lines": 299, "src": "
       if (meNode && meNode.dataset.lat) {
         var mp = map.projectToContainer(new TMap.LatLng(+meNode.dataset.lat, +meNode.dataset.lng));
         meNode.style.transform = 'translate3d(' + mp.x + 'px,' + mp.y + 'px,0)';
-      }
-      if (routePoints && routePoints.length) {
-        var pts = [];
-        for (var k = 0; k < routePoints.length; k++) {
-          var pp = map.projectToContainer(new TMap.LatLng(routePoints[k].lat, routePoints[k].lng));
-          pts.push(pp.x.toFixed(1) + ',' + pp.y.toFixed(1));
-        }
-        routePoly.setAttribute('points', pts.join(' '));
       }
       updateScale();
     }
@@ -2574,7 +2593,10 @@ window.CODE_SNIPPETS = {"crawler": {"name": "crawler.py", "lines": 299, "src": "
         schedule();
         if (tip) tip.textContent = '已定位，按商圈中心给出最近的五个区域。';
         var list = renderNearby(g[0], g[1]);
-        if (list && list.length) planTo(list[0].d.lat, list[0].d.lng, list[0].d.best ? list[0].d.best.name : list[0].d.name);
+        if (list && list.length) {
+          setTarget(list[0].d.lat, list[0].d.lng,
+            list[0].d.best ? list[0].d.best.name : list[0].d.name);
+        }
       }, function () {
         if (tip) tip.textContent = '定位未授权或被拒绝，可选择下面的商圈看附近推荐。';
         renderNearbyStatic();
@@ -2582,73 +2604,58 @@ window.CODE_SNIPPETS = {"crawler": {"name": "crawler.py", "lines": 299, "src": "
     }
     bind('#mLocate', locate);
 
-    /* ---------------- 路线规划（腾讯地图路线服务） ---------------- */
-    var msgEl = el('#mapMsg'), routePanel = el('#routePanel');
+    /* ---------------- 路线：交给腾讯地图，本页不画线 ---------------- */
+    /* 用腾讯地图 URI API 生成链接，起点终点自动带好，点击后跳到地图里规划。 */
+    var msgEl = el('#mapMsg'), routeLink = el('#routeLink');
+    var IS_MOBILE = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    var URI_TYPE = { drive: 'drive', transit: 'bus', walk: 'walk', bike: 'bike' };
 
     function say(t) { if (msgEl) msgEl.textContent = t; }
 
-    var MODE_LABEL = { driving: '驾车', transit: '公交', walking: '步行', biking: '骑行' };
-
-    function planTo(lat, lng, label) {
-      var origin = routeFrom;
-      if (!origin) {
-        /* 没拿到定位时，用城区中心当起点，功能照样可用 */
-        origin = { lat: geo.center.lat, lng: geo.center.lng };
-        say('未获取到你的位置，先以城区中心为起点。');
+    function routeURL() {
+      var mode = (el('#routeMode') || {}).value || 'drive';
+      var p = ['type=' + (URI_TYPE[mode] || 'drive'),
+               'from=' + encodeURIComponent('我的位置')];
+      if (routeFrom) {
+        p.push('fromcoord=' + routeFrom.lat.toFixed(6) + ',' + routeFrom.lng.toFixed(6));
       }
-      routeTarget = { lat: lat, lng: lng, name: label };
-      if (!window.TMap || !TMap.service) {
-        say('路线服务未加载：SDK 需带 libraries=service，且路线接口要经地图服务代理。');
-        return;
+      if (routeTarget) {
+        p.push('to=' + encodeURIComponent(routeTarget.name));
+        p.push('tocoord=' + routeTarget.lat.toFixed(6) + ',' + routeTarget.lng.toFixed(6));
       }
-      var mode = (el('#routeMode') || {}).value || 'driving';
-      var svc;
-      if (mode === 'transit') svc = new TMap.service.Transit({ policy: 'LEAST_TIME' });
-      else if (mode === 'walking') svc = new TMap.service.Walking();
-      else if (mode === 'biking') svc = new TMap.service.Bicycling();
-      else svc = new TMap.service.Driving({ policy: 'LEAST_TIME' });
-      say('正在规划' + MODE_LABEL[mode] + '路线…');
-      svc.search({
-        from: new TMap.LatLng(origin.lat, origin.lng),
-        to: new TMap.LatLng(lat, lng)
-      }).then(function (res) {
-        var plan = (res && res.result) ? res.result : res;
-        var r = plan && plan.routes && plan.routes[0];
-        if (!r) { say('没有找到可行路线。'); return; }
-        routePoints = r.polyline || [];
-        schedule();
-        var km = (r.distance / 1000).toFixed(1);
-        var mins = Math.round(r.duration);
-        var steps = (r.steps || []).filter(function (s) { return s.instruction; }).slice(0, 6)
-          .map(function (s) {
-            var m = s.mode === 'WALKING' ? '步行' : (s.mode === 'TRANSIT' ? '公交' : MODE_LABEL[mode]);
-            return '<div class="rt-step"><span class="rt-m">' + m + '</span>' +
-              '<span class="rt-i">' + esc(s.instruction) + '</span></div>';
-          }).join('');
-        if (routePanel) {
-          routePanel.innerHTML =
-            '<p class="nb-head">' + (routeFrom ? '当前位置' : '城区中心') + ' → ' + esc(label) + '</p>' +
-            '<p class="rt-sum"><b>' + km + '</b> 公里<span class="rt-sep">·</span><b>' + mins + '</b> 分钟' +
-            '<span class="rt-mode">' + MODE_LABEL[mode] + '</span></p>' +
-            (steps || '<p class="nb-note">这条路线没有分段说明。</p>');
-        }
-        say('路线已画在图上。');
-      }).catch(function (e) {
-        say('路线服务不可用：' + ((e && e.message) ? e.message : '未授权或网络受限') +
-          '。路线接口要走地图服务代理，在 WorkBuddy 预览里可用。');
-      });
+      p.push('referer=' + encodeURIComponent('北京餐厅Top100'));
+      return (IS_MOBILE ? 'qqmap://map/routeplan?' : 'https://apis.map.qq.com/uri/v1/routeplan?') +
+        p.join('&');
     }
 
-    bind('#routeGo', function () {
-      var sel = el('#dPick');
-      if (!sel || !sel.value) { say('先在地图控件里选一个商圈。'); return; }
-      var t = dists.filter(function (d) { return d.name === sel.value; })[0];
-      if (t) planTo(t.lat, t.lng, t.best ? t.best.name : t.name);
-    });
+    function refreshLink() {
+      if (!routeLink) return;
+      routeLink.href = routeURL();
+      routeLink.textContent = routeTarget
+        ? ('在腾讯地图中打开：' + routeTarget.name)
+        : '在腾讯地图中打开路线';
+    }
+
+    function setTarget(lat, lng, name) {
+      routeTarget = { lat: lat, lng: lng, name: name };
+      refreshLink();
+      say(routeFrom
+        ? '已选好终点：' + name + '。点上面的链接跳到腾讯地图看路线。'
+        : '已选好终点：' + name + '。没拿到你的位置，起点由腾讯地图自己定位。');
+    }
+
     var modeSel = el('#routeMode');
-    if (modeSel) modeSel.addEventListener('change', function () {
-      if (routeTarget) planTo(routeTarget.lat, routeTarget.lng, routeTarget.name);
-    });
+    if (modeSel) {
+      modeSel.addEventListener('change', refreshLink);
+      if (!IS_MOBILE) {
+        /* 桌面端 URI 只支持驾车与公交，步行/骑行交给 App */
+        ['walk', 'bike'].forEach(function (v) {
+          var o = modeSel.querySelector('option[value="' + v + '"]');
+          if (o) o.disabled = true;
+        });
+        modeSel.value = 'drive';
+      }
+    }
 
     function ranked(lat, lng) {
       return dists.map(function (d) {
@@ -2669,12 +2676,13 @@ window.CODE_SNIPPETS = {"crawler": {"name": "crawler.py", "lines": 299, "src": "
             '<span class="nb-shop">' + (x.d.best ? esc(x.d.best.name) + '　第 ' + x.d.best.rank + ' 名' : '—') + '</span>' +
             '</div>';
         }).join('') +
-        '<p class="nb-note">距离按商圈近似中心计算，不代表门店实际位置。点一行可规划到该商圈的路线。</p>';
+        '<p class="nb-note">距离按商圈近似中心计算，不代表门店实际位置。点一行把它设为路线终点。</p>';
       els('.nb-row', nearby).forEach(function (row) {
         row.addEventListener('click', function () {
           els('.nb-row', nearby).forEach(function (o) { o.classList.remove('on'); });
           row.classList.add('on');
-          planTo(+row.getAttribute('data-lat'), +row.getAttribute('data-lng'), row.getAttribute('data-name'));
+          setTarget(+row.getAttribute('data-lat'), +row.getAttribute('data-lng'),
+            row.getAttribute('data-name'));
         });
       });
       return rows;
@@ -2703,8 +2711,11 @@ window.CODE_SNIPPETS = {"crawler": {"name": "crawler.py", "lines": 299, "src": "
         map.setZoom(13.5);
         schedule();
         renderNearby(t.lat, t.lng);
+        setTarget(t.lat, t.lng, t.best ? t.best.name : t.name);
       });
     }
+
+    refreshLink();
   }
 
   /* ---------------------------------------------------------------- 单文件路由 */
