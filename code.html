@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>代码 · 北京餐厅 Top100</title>
 <meta name="description" content="采集、解析、建模三个脚本的完整源码与实现取舍。">
-<link rel="stylesheet" href="assets/base.css?v=6">
+<link rel="stylesheet" href="assets/base.css?v=7">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%231B4B72'/><text x='16' y='23' font-size='17' font-family='Georgia,serif' font-weight='700' fill='white' text-anchor='middle'>京</text></svg>">
 </head>
 <body data-page="code" data-code-default="crawler">
@@ -194,11 +194,21 @@
           但只要某家店本身缺评论数或人均，正则就会安静地取到下一家店的值，错得没有痕迹。
           数据工程里最贵的往往就是这类沉默的错误。
         </p>
+        <p class="en sub">
+          This is the dangerous one. Every field happens to be present in the current sample, so the
+          bug never shows. The moment one store is missing a review count, the regex quietly takes
+          the neighbour's value — and fails silently rather than loudly.
+        </p>
       </div>
       <div>
         <p style="font-size:14.5px">
           验证用了另一条完全不同的路径重抽一遍：按 li 边界切块、用 data-click-name 定位、从锚点 title 取名。
           两条路在 900 个字段值上完全一致，差异 0 个。这不是同一份代码跑两次。
+        </p>
+        <p class="en sub">
+          The second layer re-extracts everything along a different path: split on list-item
+          boundaries, locate by the click attribute, read names from the anchor title. All 900
+          values agree.
         </p>
       </div>
     </div>
@@ -349,8 +359,8 @@ python build_ranking.py
   </div>
 </footer>
 
-<script src="assets/data.js?v=6"></script>
-<script src="assets/code.js?v=6"></script>
-<script src="assets/app.js?v=6"></script>
+<script src="assets/data.js?v=7"></script>
+<script src="assets/code.js?v=7"></script>
+<script src="assets/app.js?v=7"></script>
 </body>
 </html>
