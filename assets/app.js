@@ -719,17 +719,8 @@
     me.className = 'me hidden';
     layer.appendChild(me);
 
-    /* 路线层同样走 DOM 叠加：projectToContainer 换算成像素，随视图自动跟随 */
-    var lineSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    lineSvg.setAttribute('class', 'heatline');
-    var routePoly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-    routePoly.setAttribute('class', 'route');
-    lineSvg.appendChild(routePoly);
-    box.appendChild(lineSvg);
-
-    var routePoints = null;
-    var routeFrom = null;
-    var routeTarget = null;
+    var routeFrom = null;   // 用户当前位置（GCJ-02）
+    var routeTarget = null; // 目的地（商圈中心近似坐标）
 
     function place() {
       var zoomK = Math.pow(1.28, (map.getZoom() || 11) - 11.5);
@@ -748,14 +739,6 @@
       if (meNode && meNode.dataset.lat) {
         var mp = map.projectToContainer(new TMap.LatLng(+meNode.dataset.lat, +meNode.dataset.lng));
         meNode.style.transform = 'translate3d(' + mp.x + 'px,' + mp.y + 'px,0)';
-      }
-      if (routePoints && routePoints.length) {
-        var pts = [];
-        for (var k = 0; k < routePoints.length; k++) {
-          var pp = map.projectToContainer(new TMap.LatLng(routePoints[k].lat, routePoints[k].lng));
-          pts.push(pp.x.toFixed(1) + ',' + pp.y.toFixed(1));
-        }
-        routePoly.setAttribute('points', pts.join(' '));
       }
       updateScale();
     }
@@ -826,7 +809,10 @@
         schedule();
         if (tip) tip.textContent = '已定位，按商圈中心给出最近的五个区域。';
         var list = renderNearby(g[0], g[1]);
-        if (list && list.length) planTo(list[0].d.lat, list[0].d.lng, list[0].d.best ? list[0].d.best.name : list[0].d.name);
+        if (list && list.length) {
+          setTarget(list[0].d.lat, list[0].d.lng,
+            list[0].d.best ? list[0].d.best.name : list[0].d.name);
+        }
       }, function () {
         if (tip) tip.textContent = '定位未授权或被拒绝，可选择下面的商圈看附近推荐。';
         renderNearbyStatic();
@@ -834,73 +820,58 @@
     }
     bind('#mLocate', locate);
 
-    /* ---------------- 路线规划（腾讯地图路线服务） ---------------- */
-    var msgEl = el('#mapMsg'), routePanel = el('#routePanel');
+    /* ---------------- 路线：交给腾讯地图，本页不画线 ---------------- */
+    /* 用腾讯地图 URI API 生成链接，起点终点自动带好，点击后跳到地图里规划。 */
+    var msgEl = el('#mapMsg'), routeLink = el('#routeLink');
+    var IS_MOBILE = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    var URI_TYPE = { drive: 'drive', transit: 'bus', walk: 'walk', bike: 'bike' };
 
     function say(t) { if (msgEl) msgEl.textContent = t; }
 
-    var MODE_LABEL = { driving: '驾车', transit: '公交', walking: '步行', biking: '骑行' };
-
-    function planTo(lat, lng, label) {
-      var origin = routeFrom;
-      if (!origin) {
-        /* 没拿到定位时，用城区中心当起点，功能照样可用 */
-        origin = { lat: geo.center.lat, lng: geo.center.lng };
-        say('未获取到你的位置，先以城区中心为起点。');
+    function routeURL() {
+      var mode = (el('#routeMode') || {}).value || 'drive';
+      var p = ['type=' + (URI_TYPE[mode] || 'drive'),
+               'from=' + encodeURIComponent('我的位置')];
+      if (routeFrom) {
+        p.push('fromcoord=' + routeFrom.lat.toFixed(6) + ',' + routeFrom.lng.toFixed(6));
       }
-      routeTarget = { lat: lat, lng: lng, name: label };
-      if (!window.TMap || !TMap.service) {
-        say('路线服务未加载：SDK 需带 libraries=service，且路线接口要经地图服务代理。');
-        return;
+      if (routeTarget) {
+        p.push('to=' + encodeURIComponent(routeTarget.name));
+        p.push('tocoord=' + routeTarget.lat.toFixed(6) + ',' + routeTarget.lng.toFixed(6));
       }
-      var mode = (el('#routeMode') || {}).value || 'driving';
-      var svc;
-      if (mode === 'transit') svc = new TMap.service.Transit({ policy: 'LEAST_TIME' });
-      else if (mode === 'walking') svc = new TMap.service.Walking();
-      else if (mode === 'biking') svc = new TMap.service.Bicycling();
-      else svc = new TMap.service.Driving({ policy: 'LEAST_TIME' });
-      say('正在规划' + MODE_LABEL[mode] + '路线…');
-      svc.search({
-        from: new TMap.LatLng(origin.lat, origin.lng),
-        to: new TMap.LatLng(lat, lng)
-      }).then(function (res) {
-        var plan = (res && res.result) ? res.result : res;
-        var r = plan && plan.routes && plan.routes[0];
-        if (!r) { say('没有找到可行路线。'); return; }
-        routePoints = r.polyline || [];
-        schedule();
-        var km = (r.distance / 1000).toFixed(1);
-        var mins = Math.round(r.duration);
-        var steps = (r.steps || []).filter(function (s) { return s.instruction; }).slice(0, 6)
-          .map(function (s) {
-            var m = s.mode === 'WALKING' ? '步行' : (s.mode === 'TRANSIT' ? '公交' : MODE_LABEL[mode]);
-            return '<div class="rt-step"><span class="rt-m">' + m + '</span>' +
-              '<span class="rt-i">' + esc(s.instruction) + '</span></div>';
-          }).join('');
-        if (routePanel) {
-          routePanel.innerHTML =
-            '<p class="nb-head">' + (routeFrom ? '当前位置' : '城区中心') + ' → ' + esc(label) + '</p>' +
-            '<p class="rt-sum"><b>' + km + '</b> 公里<span class="rt-sep">·</span><b>' + mins + '</b> 分钟' +
-            '<span class="rt-mode">' + MODE_LABEL[mode] + '</span></p>' +
-            (steps || '<p class="nb-note">这条路线没有分段说明。</p>');
-        }
-        say('路线已画在图上。');
-      }).catch(function (e) {
-        say('路线服务不可用：' + ((e && e.message) ? e.message : '未授权或网络受限') +
-          '。路线接口要走地图服务代理，在 WorkBuddy 预览里可用。');
-      });
+      p.push('referer=' + encodeURIComponent('北京餐厅Top100'));
+      return (IS_MOBILE ? 'qqmap://map/routeplan?' : 'https://apis.map.qq.com/uri/v1/routeplan?') +
+        p.join('&');
     }
 
-    bind('#routeGo', function () {
-      var sel = el('#dPick');
-      if (!sel || !sel.value) { say('先在地图控件里选一个商圈。'); return; }
-      var t = dists.filter(function (d) { return d.name === sel.value; })[0];
-      if (t) planTo(t.lat, t.lng, t.best ? t.best.name : t.name);
-    });
+    function refreshLink() {
+      if (!routeLink) return;
+      routeLink.href = routeURL();
+      routeLink.textContent = routeTarget
+        ? ('在腾讯地图中打开：' + routeTarget.name)
+        : '在腾讯地图中打开路线';
+    }
+
+    function setTarget(lat, lng, name) {
+      routeTarget = { lat: lat, lng: lng, name: name };
+      refreshLink();
+      say(routeFrom
+        ? '已选好终点：' + name + '。点上面的链接跳到腾讯地图看路线。'
+        : '已选好终点：' + name + '。没拿到你的位置，起点由腾讯地图自己定位。');
+    }
+
     var modeSel = el('#routeMode');
-    if (modeSel) modeSel.addEventListener('change', function () {
-      if (routeTarget) planTo(routeTarget.lat, routeTarget.lng, routeTarget.name);
-    });
+    if (modeSel) {
+      modeSel.addEventListener('change', refreshLink);
+      if (!IS_MOBILE) {
+        /* 桌面端 URI 只支持驾车与公交，步行/骑行交给 App */
+        ['walk', 'bike'].forEach(function (v) {
+          var o = modeSel.querySelector('option[value="' + v + '"]');
+          if (o) o.disabled = true;
+        });
+        modeSel.value = 'drive';
+      }
+    }
 
     function ranked(lat, lng) {
       return dists.map(function (d) {
@@ -921,12 +892,13 @@
             '<span class="nb-shop">' + (x.d.best ? esc(x.d.best.name) + '　第 ' + x.d.best.rank + ' 名' : '—') + '</span>' +
             '</div>';
         }).join('') +
-        '<p class="nb-note">距离按商圈近似中心计算，不代表门店实际位置。点一行可规划到该商圈的路线。</p>';
+        '<p class="nb-note">距离按商圈近似中心计算，不代表门店实际位置。点一行把它设为路线终点。</p>';
       els('.nb-row', nearby).forEach(function (row) {
         row.addEventListener('click', function () {
           els('.nb-row', nearby).forEach(function (o) { o.classList.remove('on'); });
           row.classList.add('on');
-          planTo(+row.getAttribute('data-lat'), +row.getAttribute('data-lng'), row.getAttribute('data-name'));
+          setTarget(+row.getAttribute('data-lat'), +row.getAttribute('data-lng'),
+            row.getAttribute('data-name'));
         });
       });
       return rows;
@@ -955,8 +927,11 @@
         map.setZoom(13.5);
         schedule();
         renderNearby(t.lat, t.lng);
+        setTarget(t.lat, t.lng, t.best ? t.best.name : t.name);
       });
     }
+
+    refreshLink();
   }
 
   /* ---------------------------------------------------------------- 单文件路由 */
