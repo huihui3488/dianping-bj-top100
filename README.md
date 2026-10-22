@@ -59,6 +59,16 @@ python build_site.py
 构建脚本会同时做一次端到端校验：用与 `build_ranking.py` 等价的实现重算整条流水线，
 并断言名次与 `top100.csv` 完全一致（当前 100/100）。校验不过会直接打印差异，不会静默生成错数据。
 
+## 如何发布
+
+```bash
+python deploy.py            # 资源版本号 +1，并把四个页面推到 GitHub
+python deploy.py --no-bump  # 只推送，不改版本号
+```
+
+页面里的 `assets/*.css|js` 都带 `?v=N`。这是必要的：GitHub Pages 对静态资源有约 10 分钟的
+强缓存，改完代码不换版本号，答辩现场可能刷出旧版 JS。`deploy.py` 会自动递增 N。
+
 ## 兼容性
 
 - 无 CDN、无 Web Font、无前端框架，`fetch` 也未使用（数据以 `assets/data.js` 全局注入），
