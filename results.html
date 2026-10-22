@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>榜单 · 北京餐厅 Top100</title>
 <meta name="description" content="100 家入榜门店明细、六张图表，以及可以现场改口径的模拟器。">
-<link rel="stylesheet" href="assets/base.css?v=6">
+<link rel="stylesheet" href="assets/base.css?v=7">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%231B4B72'/><text x='16' y='23' font-size='17' font-family='Georgia,serif' font-weight='700' fill='white' text-anchor='middle'>京</text></svg>">
 <!-- 腾讯地图 GL JS：先配代理再加载 SDK，前端不出现 key -->
 <script>
@@ -13,7 +13,7 @@
     serviceHost: 'http://127.0.0.1:__WB_HTTP_PORT__/_TMapService/_wbt/__WB_TMAP_SECRET__',
   };
 </script>
-<script src="https://map.qq.com/api/gljs?v=1.exp&libraries=service"></script>
+<script src="https://map.qq.com/api/gljs?v=1.exp"></script>
 </head>
 <body data-page="results">
 
@@ -155,6 +155,11 @@
           <b>4.0 分及以下的 25 家全部在空心区</b>；5.0 那一列也有空心点，是 11 家被同品牌旗舰店挤掉的满分店，
           其中四季民福另有 3 家、Tomacado 花厨另有 2 家。左上被框住的那个点评论数全站第一，最终排第 41 名。
         </div>
+        <p class="en sub">
+          Rating takes only four values on a list page. Everything left of 4.5 is empty — the 25
+          stores rated 4.0 or below never make the list — while the hollow points inside the 5.0
+          column are the ones crowded out by a same-brand flagship.
+        </p>
       </figure>
 
       <figure class="plate">
@@ -194,6 +199,11 @@
           评分只有四个取值档，区分度确实低，但它在榜单上起的是门槛作用：非满分店的进榜率不到满分店的一半，
           4.0 分及以下直接被清零。把权重压到 0.20，满分店仍占 58 个榜位，说明这道门槛不是权重能调掉的。
         </div>
+        <p class="en sub">
+          The most informative of the six. Rating cannot separate much, but it does sort the list:
+          a store below five stars has less than half the chance of getting in, and anything rated
+          4.0 or below is wiped out entirely.
+        </p>
       </figure>
 
       <figure class="plate">
@@ -207,6 +217,11 @@
           评论数与人均的相关系数是 -0.42，评论多的店普遍更便宜。人均没有进入模型，
           原因就在这里：加进去会和评论数互相打架，并系统性惩罚高端店。
         </div>
+        <p class="en sub">
+          Half the list sits below 150 yuan a head, and nothing below 60. Reviews and price are
+          correlated at -0.42, so adding price to the model would fight the review count and
+          penalise expensive restaurants twice over.
+        </p>
       </figure>
 
     </div>
@@ -234,12 +249,12 @@
           <span><label for="scaleRange">比例</label><input id="scaleRange" type="range" min="0.6" max="1.8" step="0.02" value="1"></span>
           <select id="dPick"><option value="">跳到商圈</option></select>
           <select id="routeMode" aria-label="出行方式">
-            <option value="driving">驾车</option>
+            <option value="drive">驾车</option>
             <option value="transit">公交</option>
-            <option value="walking">步行</option>
-            <option value="biking">骑行</option>
+            <option value="walk">步行</option>
+            <option value="bike">骑行</option>
           </select>
-          <button id="routeGo">规划路线</button>
+          <a id="routeLink" class="routelink" href="#" target="_blank" rel="noopener">在腾讯地图中打开路线</a>
         </div>
 
         <div class="mapstage">
@@ -262,9 +277,8 @@
           <span class="grad"></span>
           <span>少 → 多</span>
         </div>
-        <div class="mapmsg" id="mapMsg">点「定位我」后自动规划到最近的一家，也可点下面的商圈行改目的地。</div>
+        <div class="mapmsg" id="mapMsg">点「定位我」拿到起点，点下面任意商圈设成终点，再点链接跳到腾讯地图看路线。</div>
         <div class="nearby" id="nearbyList"></div>
-        <div class="routepanel" id="routePanel"></div>
       </div>
     </div>
 
@@ -276,7 +290,7 @@
         这张图只能回答「哪个商圈热」，不能回答「这家店在哪」。
       </div>
       <div class="note plain">
-        <b>附近推荐同样按商圈计算。</b>
+        <b>附近推荐与路线交给腾讯地图。</b>
         定位只在本机使用，坐标不出浏览器，也不写入任何存储。
         浏览器给的是 WGS84 坐标，地图用 GCJ-02，两者在北京相差约 500 米，代码里做了一次换算。
       </div>
@@ -391,7 +405,7 @@
   </div>
 </footer>
 
-<script src="assets/data.js?v=6"></script>
-<script src="assets/app.js?v=6"></script>
+<script src="assets/data.js?v=7"></script>
+<script src="assets/app.js?v=7"></script>
 </body>
 </html>
