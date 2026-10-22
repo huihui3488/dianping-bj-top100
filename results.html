@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>榜单 · 北京餐厅 Top100</title>
 <meta name="description" content="100 家入榜门店明细、六张图表，以及可以现场改口径的模拟器。">
-<link rel="stylesheet" href="assets/base.css?v=5">
+<link rel="stylesheet" href="assets/base.css?v=6">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%231B4B72'/><text x='16' y='23' font-size='17' font-family='Georgia,serif' font-weight='700' fill='white' text-anchor='middle'>京</text></svg>">
 <!-- 腾讯地图 GL JS：先配代理再加载 SDK，前端不出现 key -->
 <script>
@@ -13,7 +13,7 @@
     serviceHost: 'http://127.0.0.1:__WB_HTTP_PORT__/_TMapService/_wbt/__WB_TMAP_SECRET__',
   };
 </script>
-<script src="https://map.qq.com/api/gljs?v=1.exp"></script>
+<script src="https://map.qq.com/api/gljs?v=1.exp&libraries=service"></script>
 </head>
 <body data-page="results">
 
@@ -233,6 +233,13 @@
           <span><label for="rotRange">旋转</label><input id="rotRange" type="range" min="-180" max="180" step="1" value="0"></span>
           <span><label for="scaleRange">比例</label><input id="scaleRange" type="range" min="0.6" max="1.8" step="0.02" value="1"></span>
           <select id="dPick"><option value="">跳到商圈</option></select>
+          <select id="routeMode" aria-label="出行方式">
+            <option value="driving">驾车</option>
+            <option value="transit">公交</option>
+            <option value="walking">步行</option>
+            <option value="biking">骑行</option>
+          </select>
+          <button id="routeGo">规划路线</button>
         </div>
 
         <div class="mapstage">
@@ -250,7 +257,14 @@
       </div>
 
       <div class="mapside">
+        <div class="heatlegend">
+          <span>入榜家数</span>
+          <span class="grad"></span>
+          <span>少 → 多</span>
+        </div>
+        <div class="mapmsg" id="mapMsg">点「定位我」后自动规划到最近的一家，也可点下面的商圈行改目的地。</div>
         <div class="nearby" id="nearbyList"></div>
+        <div class="routepanel" id="routePanel"></div>
       </div>
     </div>
 
@@ -377,7 +391,7 @@
   </div>
 </footer>
 
-<script src="assets/data.js?v=5"></script>
-<script src="assets/app.js?v=5"></script>
+<script src="assets/data.js?v=6"></script>
+<script src="assets/app.js?v=6"></script>
 </body>
 </html>
