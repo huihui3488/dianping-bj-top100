@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>北京餐厅 Top100 · 大众点评数据流水线</title>
+<meta name="description" content="从 10 页原始网页到一张可解释的餐厅榜单：采集、解析、建模、可视化四段流水线的完整交付。">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23DD4B22'/><text x='16' y='23' font-size='18' font-family='sans-serif' font-weight='700' fill='white' text-anchor='middle'>京</text></svg>">
+</head>
+<body data-page="home">
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="index.html"><b>北京餐厅 Top100</b><span>Dianping&nbsp;/&nbsp;BJ</span></a>
+    <nav class="nav">
+      <a href="index.html" class="on">总览</a>
+      <a href="results.html">成果</a>
+      <a href="code.html">代码</a>
+      <a href="method.html">口径与局限</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="kicker">数据采集与可视化 · 课程项目</div>
+    <h1>把 10 页网页<br>做成一张<em>能解释的榜单</em></h1>
+    <p class="lead">
+      这不是一张「爬下来就完事」的表格。它是一条四段式流水线：<strong>采集 → 解析 → 建模 → 可视化</strong>，
+      每一段的输入、输出、判据都可复现。榜单上每一个名次，都能回溯到一条 HTML 里的 <code>data-shopid</code>，
+      再回溯到一个可公开调整的权重参数。
+    </p>
+    <div class="chips">
+      <span class="chip ok"><i></i>采集日期 <b>2026-10-15</b></span>
+      <span class="chip ok"><i></i>候选 <b data-num="stats.n">150</b> 家</span>
+      <span class="chip ok"><i></i>入榜 <b data-num="stats.n_top">100</b> 家</span>
+      <span class="chip ok"><i></i>第三方依赖 <b>0</b></span>
+      <span class="chip warn"><i></i>评分二分位 <b>52.7%</b> 满分</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">四个数字</div>
+      <h2>先看结论，再看过程</h2>
+      <p>这四个数字连起来读：采集是完整的、解析是干净的、榜单是做过取舍的、而评分这个维度的缺陷是数据本身带来的。</p>
+    </div>
+    <div class="kpis">
+      <div class="kpi">
+        <div class="v"><span data-num="stats.pages">10</span><small>/10 页</small></div>
+        <div class="k">采集成功率</div>
+        <div class="knote">零风控拦截，每页稳定 <span data-num="stats.per_page">15</span> 家，去重剔除 0 条</div>
+      </div>
+      <div class="kpi">
+        <div class="v"><span data-num="meta.boundary.brands">100</span><small>个品牌</small></div>
+        <div class="k">榜位与品牌一一对应</div>
+        <div class="knote">不加品牌限额时 100 个榜位只有 85 个品牌，四季民福一家占 6 席</div>
+      </div>
+      <div class="kpi">
+        <div class="v">100<small>%</small></div>
+        <div class="k">7 个字段完整率</div>
+        <div class="knote">1050 个字段值，缺失 0 个；重跑逐字节一致</div>
+      </div>
+      <div class="kpi">
+        <div class="v"><span data-num="meta.boundary.n5">68</span><small>/79 满分店</small></div>
+        <div class="k">满分店进榜率 <span data-num="meta.boundary.band5_rate">86</span>%</div>
+        <div class="knote">非满分店只有 <span data-num="meta.boundary.nonfull_rate">45</span>%，4.0 分及以下为 0%</div>
+      </div>
+    </div>
+    <div class="note gold" style="margin-top:22px">
+      <span class="tag">最后这个数字是整套分析的支点</span>
+      <p>150 家店里 <b>79 家都是满分</b>，评分只有 4 个取值档。这意味着「评分」对一半以上的门店<b>不产生连续区分</b>。
+      但它并没有失效——它变成了一道<b>硬门槛</b>：满分店进榜率 86%，非满分店 45%，4.0 分及以下直接清零。
+      把权重从 0.625 压到 0.20，满分店仍占 58% 的榜位。<b>这个门槛不是线性权重能调掉的</b>，
+      这是本数据集最重要的结构性事实。<a href="method.html">见口径说明 →</a></p>
+    </div>
+  </div>
+</section>
+
+<section class="tint">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">流水线</div>
+      <h2>四个环节，三次交接</h2>
+      <p>每个环节只做一件事，交付物是一个文件。下游不依赖上游的代码，只依赖它的输出——所以每一段都能单独重跑、单独验证。</p>
+    </div>
+    <div class="pipe">
+      <div class="stage">
+        <div class="idx">STAGE 01</div>
+        <h3>采集</h3>
+        <div class="who">韦继丞 · 成员 1</div>
+        <div class="io">
+          <b>输入</b>：登录态 Cookie<br>
+          <b>输出</b>：<code>raw/2026-10-15/page01–10/*.html</code><br>
+          <b>做法</b>：标准库 urllib，随机 2–5 秒限速，识别验证页即熔断
+        </div>
+        <div class="verdict">10/10 页 · 150 家 · 零拦截</div>
+      </div>
+      <div class="stage">
+        <div class="idx">STAGE 02</div>
+        <h3>解析</h3>
+        <div class="who">王喆 · 成员 2</div>
+        <div class="io">
+          <b>输入</b>：10 页原始 HTML<br>
+          <b>输出</b>：<code>data/restaurants_clean.csv</code><br>
+          <b>做法</b>：正则 + 分块，先锁 <code>data-shopid</code> 再取字段
+        </div>
+        <div class="verdict">150 家 × 7 字段 · 100%</div>
+      </div>
+      <div class="stage">
+        <div class="idx">STAGE 03</div>
+        <h3>建模</h3>
+        <div class="who">杨博尧 · 成员 3</div>
+        <div class="io">
+          <b>输入</b>：清洗后的 CSV<br>
+          <b>输出</b>：<code>top100.csv / .json / dianping.db</code><br>
+          <b>做法</b>：双维度加权 + 三道闸门（门槛、排序、品牌限额）
+        </div>
+        <div class="verdict">100 家 · 100 品牌 · 权重 0.625/0.375</div>
+      </div>
+      <div class="stage">
+        <div class="idx">STAGE 04</div>
+        <h3>可视化与整合</h3>
+        <div class="who">管雄晖 · 成员 4</div>
+        <div class="io">
+          <b>输入</b>：三类交付物<br>
+          <b>输出</b>：本网站（成果 + 代码）<br>
+          <b>做法</b>：静态站点，零外部依赖，可离线演示
+        </div>
+        <div class="verdict">7 图 + 100 行明细 + 口径实验台</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">阅读路径</div>
+      <h2>这个项目回答三个问题</h2>
+      <p>网站按「结论 → 依据 → 方法」三段组织。答辩时按这三个入口往下讲，不会乱。</p>
+    </div>
+    <div class="grid-3">
+      <a class="card card-link" href="results.html">
+        <span class="tagline warn">成果</span>
+        <h3 style="margin-top:14px">谁进了 Top100？</h3>
+        <p>100 家入榜 + 50 家落榜的全量明细、7 张图表，以及一个能现场重算整条口径的实验台——
+        让老师自己改权重、改门槛、改品牌限额，看榜单怎么变。</p>
+        <span class="arrow">看榜单与图表</span>
+      </a>
+      <a class="card card-link" href="code.html">
+        <span class="tagline">代码</span>
+        <h3 style="margin-top:14px">数据是怎么来的？</h3>
+        <p>三个脚本共 <b>1,464 行</b>的完整源码，带行号与语法着色。
+        每个关键决策旁都标了「为什么这么写」和当时踩到的坑。</p>
+        <span class="arrow">读源码与讲解</span>
+      </a>
+      <a class="card card-link" href="method.html">
+        <span class="tagline gold">口径</span>
+        <h3 style="margin-top:14px">为什么这么排？</h3>
+        <p>评分公式、权重为什么从 0.5/0.3/0.2 改成 0.625/0.375、被砍掉的客流量维度、
+        品牌限额为何是影响最大的一步，以及这份榜单在哪些地方<b>不</b>可信。</p>
+        <span class="arrow">看口径与局限</span>
+      </a>
+    </div>
+
+    <div class="note" style="margin-top:28px">
+      <span class="tag">口径已变更 · 请以本页为准</span>
+      <p>原始方案是「评分 0.50 + 评论 0.30 + 客流量 0.20」三维度。<b>客流量维度已在 P0 阶段整体删除</b>：
+      月售、评论增速、价格分位这三个候选代理指标中，前两个在站点全部接口里都不存在，第三个与客流无因果。
+      剩余两维按原 5:3 比例等比放大，得到 <b>0.625 / 0.375</b>。
+      只删维度、不用代理指标硬凑——这是全组的书面决定，也是答辩时最容易被追问的一处，<a href="method.html">完整论证在这里</a>。</p>
+    </div>
+  </div>
+</section>
+
+<section class="tint">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">分工与交付</div>
+      <h2>四个人，一条链</h2>
+      <p>四人全部交付完毕。成员 4 的工作是在前三段之上做整合，不重写任何上游逻辑——
+      本站在构建阶段用等价实现重算了一遍成员 3 的流水线，<b>名次 100/100 一致</b>，以此确认接入没有走样。</p>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead>
+          <tr><th style="width:88px">成员</th><th style="width:150px">负责环节</th><th>交付物</th><th style="width:150px">关键数字</th><th style="width:88px">状态</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>韦继丞</b></td><td>数据采集</td>
+            <td><code>crawler.py</code>（299 行）· <code>raw/</code> 十页原始 HTML · <code>record.json</code></td>
+            <td class="num">10 页 / 150 家</td>
+            <td><span class="tagline">已交付</span></td>
+          </tr>
+          <tr>
+            <td><b>王喆</b></td><td>解析与清洗</td>
+            <td><code>parser.py</code>（420 行）· <code>restaurants_clean.csv</code> · 数据质量报告</td>
+            <td class="num">完整率 100%</td>
+            <td><span class="tagline">已交付</span></td>
+          </tr>
+          <tr>
+            <td><b>杨博尧</b></td><td>榜单建模</td>
+            <td><code>build_ranking.py</code>（745 行）· <code>top100.csv/.json</code> · <code>dianping.db</code> · <code>scoring.yaml</code></td>
+            <td class="num">100 品牌 / 68 满分</td>
+            <td><span class="tagline">已交付</span></td>
+          </tr>
+          <tr>
+            <td><b>管雄晖</b></td><td>可视化与整合</td>
+            <td>本网站 · 7 张图表 · 口径实验台 · 分析报告</td>
+            <td class="num">4 页 / 0 依赖</td>
+            <td><span class="tagline warn">本次</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap row">
+    <span><b>北京餐厅 Top100</b> · 大众点评数据流水线</span>
+    <span>数据采集 <b>2026-10-15</b></span>
+    <span>仅用于课程研究，不公开分发</span>
+    <span class="sep"></span>
+    <span>页面不含任何 Cookie / 代理凭据</span>
+    <span>© <span id="year">2026</span></span>
+  </div>
+</footer>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
