@@ -3,44 +3,52 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>口径与局限 · 北京餐厅 Top100</title>
-<meta name="description" content="评分模型、三道筛选闸门、权重变更的完整论证，以及这份榜单在哪些地方不可信。">
-<link rel="stylesheet" href="assets/base.css?v=2">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23DD4B22'/><text x='16' y='23' font-size='18' font-family='sans-serif' font-weight='700' fill='white' text-anchor='middle'>京</text></svg>">
+<title>口径 · 北京餐厅 Top100</title>
+<meta name="description" content="评分模型、三道筛选闸门、权重变更的论证，以及这份榜单的七条局限。">
+<link rel="stylesheet" href="assets/base.css?v=3">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%231B4B72'/><text x='16' y='23' font-size='17' font-family='Georgia,serif' font-weight='700' fill='white' text-anchor='middle'>京</text></svg>">
 </head>
 <body data-page="method">
 
-<header class="topbar">
-  <div class="wrap topbar-inner">
-    <a class="brand" href="index.html"><b>北京餐厅 Top100</b><span>Dianping&nbsp;/&nbsp;BJ</span></a>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="mark" href="index.html">北京餐厅 Top100<i>2026</i></a>
     <nav class="nav">
-      <a href="index.html">总览</a>
-      <a href="results.html">成果</a>
+      <a href="index.html">概览</a>
+      <a href="results.html">榜单</a>
       <a href="code.html">代码</a>
-      <a href="method.html" class="on">口径与局限</a>
+      <a href="method.html" aria-current="page">口径</a>
     </nav>
   </div>
 </header>
 
 <main>
 
-<section class="hero" style="padding-bottom:44px">
-  <div class="wrap">
-    <div class="kicker">口径与局限</div>
-    <h1 style="font-size:clamp(32px,4.4vw,52px)">一份榜单的可信度，<br>等于它的<em>口径</em>被讲清楚的程度</h1>
-    <p class="lead">
-      这一页写四件事：分数怎么算、权重为什么改、是谁真正在改变排名、以及这份榜单在哪些地方<b>不该被相信</b>。
-      最后一节主动交代局限——与其被追问，不如先说。
-    </p>
+<div class="head">
+  <div class="wrap head-grid">
+    <div>
+      <h1>口径</h1>
+      <p class="lede">
+        分数怎么算、权重为什么改、是谁真正在改变排名，以及这份榜在哪些地方不该被相信。
+        最后一部分主动交代局限。与其等别人问，不如先写下来。
+      </p>
+    </div>
+    <div class="sheet">
+      <div><span>评分权重</span><b>0.625</b></div>
+      <div><span>评论数权重</span><b>0.375</b></div>
+      <div><span>评论数门槛</span><b>2,000</b></div>
+      <div><span>品牌限额</span><b>1<small>家 / 品牌</small></b></div>
+      <div><span>榜单长度</span><b>100</b></div>
+    </div>
   </div>
-</section>
+</div>
 
-<section style="padding-top:0;border-top:0">
+<section class="section" style="border-top:0;padding-top:0">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">模型</div>
-      <h2>双维度加权，三道闸门</h2>
-      <p>模型本身很简单，复杂的是「为什么是这两个维度、这两个权重、这三道筛选」。公式写在这里，任何人都能拿原始 CSV 重算出同一张榜。</p>
+    <div class="h2blk">
+      <div class="rule"></div>
+      <h2>公式</h2>
+      <p>模型本身很简单，复杂的是为什么只有这两个维度、为什么是这两个权重。公式放在这里，任何人都能拿原始 CSV 重算出同一张榜。</p>
     </div>
 
     <div class="formula">
@@ -48,352 +56,341 @@
 综合分 = <span class="w">0.625</span> × <span class="f">minmax(评分)</span> &nbsp;+&nbsp; <span class="w">0.375</span> × <span class="f">minmax(ln(1 + 评论数))</span>
       </div>
       <div class="hint">
-        · <b>评分</b>：有界量纲（3.5–5.0），直接做 min-max。<code>n(5.0)=1</code>、<code>n(4.5)=0.667</code>、<code>n(4.0)=0.333</code>、<code>n(3.5)=0</code>。<br>
-        · <b>评论数</b>：跨度 55.8 倍（1384–77275）且右偏，先 <code>ln(1+x)</code> 压缩再做 min-max，否则头部店会把其余 140 家压到 0 附近。<br>
-        · 两个 min-max 都在<b>通过评论数门槛之后的样本</b>上计算（实际区间：评分 3.5–5.0，评论数 2487–77275）。<br>
-        · 权重两项之和必须为 1.0，<code>build_ranking.py</code> 启动时硬校验，写错直接报错退出，不会静默算出偏移的榜单。
+        评分是有界量纲（3.5 到 5.0），直接做 min-max：5.0 得 1，4.5 得 0.667，4.0 得 0.333，3.5 得 0。<br>
+        评论数跨度 55.8 倍且右偏，先取 <code>ln(1+x)</code> 再做 min-max，否则头部几家会把其余 140 家压到 0 附近。<br>
+        两个 min-max 都在通过评论数门槛之后的样本上计算，实际区间是评分 3.5 到 5.0、评论数 2487 到 77275。<br>
+        权重合计必须为 1.0，<code>build_ranking.py</code> 启动时校验，写错直接报错退出。
       </div>
-    </div>
-
-    <div class="tbl-wrap" style="margin-top:24px">
-      <table class="tbl">
-        <thead><tr><th style="width:44px">闸门</th><th style="width:210px">名称</th><th style="width:150px">参数</th><th>作用与实测效果</th></tr></thead>
-        <tbody>
-          <tr><td class="n">1</td><td><b>评论数门槛</b></td><td><code>min_review_count = 2000</code></td>
-            <td>150 → 148 家。原设计门槛是 100，对本次数据<b>完全不起作用</b>（最低也有 1384 条，0 家被筛掉），上调到 2000 才让参数真正生效，同时只剔除极少数店、不改变榜单主体结构。</td></tr>
-          <tr><td class="n">2</td><td><b>双维度加权排序</b></td><td><code>0.625 / 0.375</code></td>
-            <td>同分依次比评分 → 评论数 → 店名，三级兜底。保证任何人重跑，同分店的先后完全一致（<code>top100.csv</code> 两次生成 SHA 相同）。</td></tr>
-          <tr><td class="n">3</td><td><b>品牌限额</b></td><td><code>max_per_brand = 1</code></td>
-            <td>最终 100 家。150 家门店只对应 128 个品牌，13 个连锁品牌占 35 家店。不加限额时 Top100 只有 <b>85 个品牌</b>、四季民福一家占 6 席；限 1 家后<b>100 个榜位对应 100 个品牌，第一名不变</b>。</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="note gold" style="margin-top:18px">
-      <span class="tag">第 3 道闸门是本题最容易被低估的一步</span>
-      <p>评审看到「100 家」时，通常默认这 100 家是纯按分数取的前 100。实际不是——它是<b>按分数排序、再按品牌去重</b>后的前 100。
-      代价是有些高分门店被同品牌的旗舰店挤掉（成果页散点图里 5.0 分那一列的空心点就是它们）；
-      收益是榜单呈现的是 100 个不同品牌，而不是「四季民福 / 海底捞 / 南门涮肉」各占 5–6 席。
-      <b>这是一个必须主动说明的口径选择，不是隐藏规则。</b></p>
     </div>
   </div>
 </section>
 
-<section class="tint">
+<section class="section band">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">关键变更</div>
-      <h2>我们删掉了一个维度，而不是硬凑一个代理指标</h2>
-      <p>原方案是「评分 0.50 + 评论数 0.30 + 客流量 0.20」。客流量维度在 P0 可行性验证阶段被整体删除。这一节是完整论证。</p>
+    <div class="h2blk">
+      <div class="rule"></div>
+      <h2>三道闸门</h2>
+      <p>150 家不是直接按分数取前 100，中间过了三道筛选。第三道最容易被看漏。</p>
     </div>
 
-    <div class="tbl-wrap">
-      <table class="tbl">
+    <div class="tbox">
+      <table class="tb">
         <thead>
-          <tr><th style="width:190px">原设计候选指标</th><th style="width:96px">定位</th><th>实测结论</th><th style="width:110px">判定</th></tr>
+          <tr><th style="width:40px">#</th><th style="width:150px">闸门</th><th style="width:200px">参数</th><th>作用与实测</th></tr>
         </thead>
         <tbody>
           <tr>
-            <td><code>monthly_sales</code>（月售）</td><td>首选</td>
-            <td>列表页、详页、以及详页内嵌的 <b>10 个移动端 API 响应（共 310 个字段）</b> 里逐词搜索
-            <code>月售</code> / <code>已售</code> / <code>售出</code> / <code>销量</code> / <code>sale</code> / <code>soldCount</code>，
-            命中次数<b>全部为 0</b></td>
-            <td><span class="tagline warn">不可得</span></td>
+            <td class="n">1</td><td class="name">评论数门槛</td>
+            <td><code>min_review_count: 2000</code></td>
+            <td>150 家剩 148 家。原设计门槛是 100，对这批数据完全不起作用，因为最低也有 1384 条，一家都没筛掉。上调到 2000 才让这个参数真正生效，同时只剔掉两家。</td>
           </tr>
           <tr>
-            <td><code>review_velocity</code>（评论增速）</td><td>次选</td>
-            <td>公式需要「开店日期」，该字段全站同样不存在；且只有单一时点快照，无法计算增量</td>
-            <td><span class="tagline warn">不可得</span></td>
+            <td class="n">2</td><td class="name">加权排序</td>
+            <td><code>0.625 / 0.375</code></td>
+            <td>同分依次比评分、评论数、店名，四级兜底。保证任何人重跑，同分店的先后完全一致。</td>
           </tr>
           <tr>
-            <td><code>price_band_mid</code>（人均分位）</td><td>兜底</td>
-            <td>能算，但它只是「价格分位」，与客流量没有因果关系——贵不等于客流大，用它当客流代理在方法论上站不住</td>
-            <td><span class="tagline gold">不成立</span></td>
+            <td class="n">3</td><td class="name">品牌限额</td>
+            <td><code>max_per_brand: 1</code></td>
+            <td>最终 100 家。150 家门店只对应 128 个品牌，13 个连锁品牌占了 35 家店。不加限额时 Top100 只有 85 个品牌，四季民福一家占 6 席；限 1 席后 100 个榜位对应 100 个品牌，第一名不变。</td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <div class="note" style="margin-top:20px">
-      <span class="tag">结论与处置</span>
-      <p>三个候选指标里，两个在数据源上根本不存在，一个在逻辑上不成立。我们的处置是<b>删除维度</b>，
-      而不是拿相关性不明的变量硬填——因为一旦用了代理指标，榜单的每一个名次都会带上一层无法解释的假设，答辩时也无法自证。</p>
-      <p style="margin-top:10px">剩余两个维度按原 <b>5 : 3</b> 的比例等比放大到合计 1.0：
-      <code>0.50 ÷ 0.80 = 0.625</code>，<code>0.30 ÷ 0.80 = 0.375</code>。比例关系不变，只是把原分配给客流的 0.20 按原比例还给了前两项。</p>
-    </div>
-
-    <div class="note grey" style="margin-top:14px">
-      <span class="tag">备查：详页其实有这些字段，但我们不用</span>
-      <p>如果把范围扩到详页，<code>window.__xhrCache__</code> 里确实藏着列表页没有的字段：
-      <code>shopPower</code>（平台官方热度值，实测 <code>45</code>）、<code>rankName</code>（官方热门榜位次，如「朝阳区云南菜|滇菜热门榜 · 第4名」）、
-      <code>shopPowerRate</code>（平台侧总评，口径与列表页星级不同）、<code>picCountStr</code>、<code>recommendCount</code>。
-      按全组决定，这些字段不纳入模型——「平台热度值」的算法不公开，用它排序等于把结论外包给平台。
-      记录在此有两个用途：被问「真的没有客流数据吗」时能给出确切答复；若后期要扩展，方案是现成的（需额外抓 150 个详页）。</p>
+    <div class="note" style="margin-top:24px;max-width:76ch">
+      第三道闸门是个明确的人为干预，代价写在局限里：有 11 家满分店被同品牌的旗舰店挤了出去。
+      换来的是榜单呈现 100 个品牌，而不是 20 个连锁品牌的旗舰店集合。这一步必须说明，不能当成隐藏规则。
     </div>
   </div>
 </section>
 
-<section>
+<section class="section">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">谁真正在改变排名</div>
-      <h2>权重只值 3–7 家，筛选条件值 15 家</h2>
-      <p>这是本项目最有价值的一次实验。每行只改一个变量，所以「换了几家」可以干净地归因到那一个改动。</p>
+    <div class="h2blk">
+      <div class="rule"></div>
+      <h2>删掉一个维度，而不是找个代理指标顶上</h2>
+      <p>原设计是评分 0.50、评论 0.30、客流量 0.20 三个维度。客流量在可行性验证阶段被整个删掉。</p>
     </div>
 
-    <div class="tbl-wrap">
-      <table class="tbl">
+    <div class="tbox">
+      <table class="tb">
         <thead>
-          <tr><th>方案</th><th class="n" style="width:96px">品牌数</th><th class="n" style="width:96px">满分店</th><th class="n" style="width:110px">与定稿重合</th><th class="n" style="width:88px">换人</th></tr>
+          <tr><th style="width:180px">候选指标</th><th style="width:80px">定位</th><th>实测结论</th><th style="width:100px">判定</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>monthly_sales</code> 月售</td><td>首选</td>
+            <td>列表页、详页，以及详页内嵌的 10 个移动端接口响应（共 310 个字段）里逐词搜索月售、已售、售出、销量、sale、soldCount，命中次数全部为 0</td>
+            <td>不可得</td>
+          </tr>
+          <tr>
+            <td><code>review_velocity</code> 评论增速</td><td>次选</td>
+            <td>公式需要开店日期，这个字段全站也不存在；而且只有单一时点快照，算不出增量</td>
+            <td>不可得</td>
+          </tr>
+          <tr>
+            <td><code>price_band_mid</code> 人均分位</td><td>兜底</td>
+            <td>能算，但它只是价格分位，与客流量没有因果关系。贵不等于客流大</td>
+            <td>不成立</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="margin-top:24px;max-width:76ch">
+      三个候选里两个在数据源上不存在，一个在逻辑上不成立。处置是删掉维度，而不是找个相关性不明的变量填进去。
+      一旦用了代理指标，榜单的每个名次都会挂着一层解释不了的假设。剩下两项按原 5:3 比例放大到合计 1.0：
+      0.50 除以 0.80 得 0.625，0.30 除以 0.80 得 0.375。比例关系没变，只是把原属客流的 0.20 按原比例还给了前两项。
+    </p>
+
+    <div class="note plain" style="margin-top:24px;max-width:76ch">
+      <b>备查：详页其实藏着这些字段，但我们没用。</b>
+      详页的 <code>window.__xhrCache__</code> 里有 <code>shopPower</code>（平台热度值，实测 45）、
+      <code>rankName</code>（官方热门榜位次，例如「朝阳区云南菜|滇菜热门榜第 4 名」）、
+      <code>shopPowerRate</code>（平台侧总评，口径与列表页星级不同）。按全组决定不纳入模型：
+      平台热度值的算法不公开，拿它排序等于把结论外包给平台。记在这里，是为了万一要扩展时方案是现成的。
+    </div>
+  </div>
+</section>
+
+<section class="section band">
+  <div class="wrap">
+    <div class="h2blk">
+      <div class="rule"></div>
+      <h2>谁真正在改变排名</h2>
+      <p>每行只改一个变量，换掉几家可以直接归因到那一处。</p>
+    </div>
+
+    <div class="tbox">
+      <table class="tb">
+        <thead>
+          <tr>
+            <th>方案</th>
+            <th class="n" style="width:92px">品牌数</th>
+            <th class="n" style="width:92px">满分店</th>
+            <th class="n" style="width:110px">与定稿重合</th>
+            <th class="n" style="width:80px">换人</th>
+          </tr>
         </thead>
         <tbody id="compareBody"></tbody>
       </table>
     </div>
 
-    <div class="grid-2" style="margin-top:24px">
-      <div class="card">
-        <h3>结论一：调权重几乎不动榜单</h3>
-        <p>权重从 0.625 改到 0.50 只换 <b>4 家</b>，改到 0.40 换 <b>7 家</b>；
-        把评论数门槛从 2000 改回原来的 100，也只换 <b>1 家</b>。</p>
-        <p>原因很直接：<b>79 家满分店在评分维度上并列</b>，平局实际由评论数打破。所谓「把评分拉开」的操作，最后都被评论数覆盖回去了。
-        口径选择的价值主要不在权重微调上。</p>
-      </div>
-      <div class="card">
-        <h3>结论二：品牌限额是唯一显著改变结构的手段</h3>
-        <p>去掉品牌限额，直接换掉 <b>15 家</b>，品牌数从 100 掉到 85；放宽到每家 2 席，换 9 家、品牌数 91。</p>
-        <p>所以最终口径保留了 0.625/0.375（有等比分配的明确来历，不是拍脑袋），把精力放在筛选条件上。
-        <b>答辩如果只讲权重、不讲品牌限额，等于漏掉了真正影响榜单的那一刀。</b></p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="tint">
-  <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">评分的真实作用</div>
-      <h2>它不是连续打分，是一道硬门槛</h2>
-      <p>「评分只有四档、区分度低」这个观察容易被误读成「评分没用」。数据显示恰好相反。</p>
-    </div>
-
-    <div class="two-col">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:36px;margin-top:28px">
       <div>
-        <div class="tbl-wrap">
-          <table class="tbl">
-            <thead><tr><th style="width:86px">评分档</th><th class="n" style="width:78px">候选</th><th class="n" style="width:78px">入榜</th><th class="n">进榜率</th></tr></thead>
-            <tbody>
-              <tr><td><b>5.0</b></td><td class="n num">79</td><td class="n num">68</td><td class="n num"><b style="color:var(--brand-ink)">86%</b></td></tr>
-              <tr><td><b>4.5</b></td><td class="n num">46</td><td class="n num">32</td><td class="n num">70%</td></tr>
-              <tr><td><b>4.0</b></td><td class="n num">24</td><td class="n num">0</td><td class="n num" style="color:var(--ink-4)">0%</td></tr>
-              <tr><td><b>3.5</b></td><td class="n num">1</td><td class="n num">0</td><td class="n num" style="color:var(--ink-4)">0%</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p style="font-size:13px;color:var(--ink-4);margin-top:10px">
-          非满分店合计 71 家，入榜 32 家，进榜率 <b>45%</b>——不到满分店（86%）的一半。
-        </p>
+        <p><b>调权重几乎不动榜单。</b>权重从 0.625 换到 0.50 只换 4 家，换到 0.40 换 7 家。
+        把评论数门槛改回原来的 100，也只换 1 家。</p>
+        <p>原因是 79 家满分店在评分上并列，平局实际由评论数打破。想让评分拉开差距的操作，最后都被评论数覆盖回去了。</p>
+      </div>
+      <div>
+        <p><b>品牌限额是唯一显著改变结构的手段。</b>去掉它，直接换 15 家，品牌数从 100 掉到 85；
+        放宽到每家 2 席，换 9 家，品牌数 91。</p>
+        <p>所以最终口径保留 0.625 与 0.375，把注意力放在筛选条件上。
+        只看权重、不看品牌限额，等于漏掉了真正影响榜单的那一刀。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="h2blk">
+      <div class="rule"></div>
+      <h2>评分是门槛，不是打分器</h2>
+      <p>「评分只有四档、区分度低」容易被读成「评分没用」。数据说的是另一回事。</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1.15fr;gap:44px;align-items:start">
+      <div class="tbox">
+        <table class="tb">
+          <thead><tr><th style="width:80px">评分档</th><th class="n" style="width:74px">候选</th><th class="n" style="width:70px">入榜</th><th class="n">进榜率</th></tr></thead>
+          <tbody>
+            <tr><td class="name">5.0</td><td class="n">79</td><td class="n">68</td><td class="n"><b>86%</b></td></tr>
+            <tr><td class="name">4.5</td><td class="n">46</td><td class="n">32</td><td class="n">70%</td></tr>
+            <tr><td class="name">4.0</td><td class="n">24</td><td class="n">0</td><td class="n">0%</td></tr>
+            <tr><td class="name">3.5</td><td class="n">1</td><td class="n">0</td><td class="n">0%</td></tr>
+          </tbody>
+        </table>
       </div>
 
-      <div class="stack-sm">
-        <p><b>为什么是门槛而不是打分。</b>档差 0.5 分在归一化后是 0.333，乘以权重 0.625 等于 <b>0.208</b>；
-        而评论数维度总共只能贡献 0.375。所以一个 5.0 分店即使评论数垫底，也能压过大部分 4.5 分店。</p>
-        <p><b>这个门槛不是线性权重能调掉的。</b>把评分权重从 0.625 压到 0.20，满分店仍占 58% 的榜位——
+      <div>
+        <p>档差 0.5 分在归一化后是 0.333，乘 0.625 的权重等于 0.208 分；而评论数维度总共只能贡献 0.375。
+        所以一个 5.0 分店哪怕评论数垫底，也能压过大部分 4.5 分店。</p>
+        <p>这个门槛不是线性权重能调掉的。把评分权重从 0.625 压到 0.20，满分店仍占 58 个榜位，
         因为只要权重非零，4.0 分店在评分项上就是 0，永远补不回来。</p>
-        <p><b>反证：</b>评论数全站第一的门店（<b data-num="meta.busiest.reviews">77,275</b> 条，热度绝对第一）只有 4.5 分，
-        最终排第 <b data-num="meta.busiest.rank">41</b> 名。这是门槛效应最直接的一个例子——
-        「为什么这家网红店排这么后面」这个问题，答案就在这里。</p>
+        <p>反证在成果页的散点图里：评论数全站第一的那家店有 77275 条评价，热度绝对第一，但只有 4.5 分，
+        最终排第 41 名。这就是门槛效应最直接的例子。</p>
+      </div>
+    </div>
 
-        <div class="note teal">
-          <span class="tag">可以直接背的一句</span>
-          <p>「评分这个维度的信息量被数据本身限制了，不是算法能补的。但它并没有失效——
-          它把榜单切成了『满分』和『非满分』两个池子，前者的进榜率是后者的两倍。我们把这个限制写进报告，
-          而不是用换维度的方式假装它不存在。」</p>
-        </div>
+    <div class="note" style="margin-top:32px;max-width:76ch">
+      非满分店共 71 家，入榜 32 家，进榜率 45%，不到满分店的一半。评分的区分能力被数据本身限制了，
+      但它并没有失效，它把榜单切成了满分与非满分两个池子。
+    </div>
+  </div>
+</section>
+
+<section class="section band">
+  <div class="wrap">
+    <div class="h2blk">
+      <div class="rule"></div>
+      <h2>两次相关性检验</h2>
+      <p>两个数，正好挡住两个容易出问题的地方。</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:44px">
+      <div>
+        <p style="font-family:var(--num);font-size:26px;color:var(--ink);margin-bottom:10px">
+          评分 ↔ 评论数　ρ ≈ -0.03
+        </p>
+        <p>在 150 家全样本上复算为 <b data-num="meta.corr.rating_review">-0.0446</b>，量级一致，结论是几乎无关。</p>
+        <p>它回答的是：评论数会不会只是评分的代理变量，两个维度是不是在重复计算同一个信号。答案是不会，两者近乎正交，加权有意义。</p>
+      </div>
+      <div>
+        <p style="font-family:var(--num);font-size:26px;color:var(--ink);margin-bottom:10px">
+          评论数对数 ↔ 人均　ρ = <span data-num="meta.corr.logreview_price">-0.4201</span>
+        </p>
+        <p>负相关明显，评论多的店普遍更便宜。</p>
+        <p>它回答的是：为什么人均不作为维度。因为加上它就会和评论数互相打架，并且系统性惩罚高端店。贵店天然评论少，会被扣两次分。这是主动排除。</p>
       </div>
     </div>
   </div>
 </section>
 
-<section>
+<section class="section">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">相关性检验</div>
-      <h2>两个相关系数，挡住两个必问的追问</h2>
-    </div>
-    <div class="grid-2">
-      <div class="card">
-        <h3>评分 ↔ 评论数：<span style="color:var(--teal)">ρ ≈ -0.03</span></h3>
-        <p>在 150 家全样本上复算为 <b data-num="meta.corr.rating_review">-0.0446</b>，量级一致，结论是「几乎无关」。</p>
-        <p><b>它挡的是这个问题：</b>「评论数是不是只是评分的代理变量？两个维度会不会在重复计算同一条信息？」
-        答案是不会——两者近乎正交，所以加权是有意义的，不是把同一个信号数了两遍。</p>
-      </div>
-      <div class="card">
-        <h3><code>ln(评论数)</code> ↔ 人均价格：<span style="color:var(--brand-ink)">ρ = <span data-num="meta.corr.logreview_price">-0.4201</span></span></h3>
-        <p>负相关明显：<b>评论多的店普遍更便宜</b>。</p>
-        <p><b>它挡的是这个问题：</b>「为什么人均价格不作为一个维度？」
-        因为加上它就会和评论数互相打架，并且系统性惩罚高端店——贵店天然评论少，会被双重扣分。
-        这是主动排除，不是遗漏。</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="tint">
-  <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">数据可信度</div>
-      <h2>三层验证，每一层都留了可复现的证据</h2>
-    </div>
-    <div class="grid-3">
-      <div class="card">
-        <span class="tagline">第一层 · 可复现</span>
-        <h3 style="margin-top:12px">重跑逐字节一致</h3>
-        <p style="font-size:14px">重新执行 <code>python parser.py</code> 生成的 CSV 与交付版本完全一致
-        （13894 bytes，SHA-256 前 16 位 <code>faf7f4894ffbba9d</code>）；
-        连跑两次 <code>build_ranking.py</code>，<code>top100.csv</code> 的 SHA 也完全相同。</p>
-      </div>
-      <div class="card">
-        <span class="tagline">第二层 · 交叉验证</span>
-        <h3 style="margin-top:12px">900 个字段值，差异 0</h3>
-        <p style="font-size:14px">换一条完全不同的解析路径重抽：<code>&lt;li&gt;</code> 边界切块、
-        <code>data-click-name</code> 定位、锚点 <code>title</code> 取名。两条路径在 6 个字段 × 150 家 = 900 个值上完全一致。</p>
-      </div>
-      <div class="card">
-        <span class="tagline">第三层 · 端到端</span>
-        <h3 style="margin-top:12px">名次 100/100 一致</h3>
-        <p style="font-size:14px">本站在构建阶段用<b>等价实现</b>重算了成员 3 的整条流水线
-        （过滤 → 归一化 → 加权 → 三级排序 → 品牌限额），
-        与 <code>top100.csv</code> 名次全对，<code>final_score</code> 最大误差 <b>5×10⁻⁷</b>（浮点舍入）。</p>
-      </div>
+    <div class="h2blk">
+      <div class="rule"></div>
+      <h2>三层验证</h2>
+      <p>每一层都留了可复现的证据，不是口头保证。</p>
     </div>
 
-    <div class="note gold" style="margin-top:20px">
-      <span class="tag">一处必须主动交代的口径差异</span>
-      <p>成员 1 的抽样文件 <code>member1_field_check.json</code> 与当前 <code>raw/</code> 只有 <b>134/150</b> 个 shop_id 能对上，
-      另有 16 个对不上。逐条核对后判定：<b>这是两次采集之间榜单变动导致的，不是解析 bug</b>。
-      依据是结果完全对称——parser 独有的 16 个 ID 全部在原始页面中存在，参考文件独有的 16 个全部不存在；
-      重合部分 804 个字段值里只有 1 处差异（评论数 9426 vs 9412，符合评论数随时间增长的方向）。</p>
-      <p style="margin-top:8px">所以<b>不要</b>说「和成员 1 逐条比对 150 条完全一致」。正确说法是：
-      「与独立实现 900 个字段值完全一致；成员 1 的抽样文件为早期快照，重合部分仅评论数有 1 处随时间增长的差异。」</p>
-    </div>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">局限声明</div>
-      <h2>这份榜单不能用来回答什么</h2>
-      <p>以下七条会在报告里原样出现。主动划出边界，比声称「数据准确」更有说服力。</p>
-    </div>
-
-    <div class="tbl-wrap">
-      <table class="tbl">
-        <thead><tr><th style="width:44px">#</th><th style="width:230px">局限</th><th>影响</th></tr></thead>
+    <div class="tbox">
+      <table class="tb">
+        <thead><tr><th style="width:120px">层次</th><th style="width:200px">做法</th><th>结论</th></tr></thead>
         <tbody>
-          <tr><td class="n">1</td><td><b>单一时点快照</b></td>
-            <td>2026-10-15 一次采集，没有时间序列。无法算评论增速、无法看趋势、无法判断一家店在上升还是衰退。</td></tr>
-          <tr><td class="n">2</td><td><b>缺少客流量维度</b></td>
-            <td>平台不公开月售数据，模型只有评分与评论数两个维度。「谁更热门」这个问题，本榜只能间接回答。</td></tr>
-          <tr><td class="n">3</td><td><b>列表页星级只有 0.5 档</b></td>
-            <td>口径与店铺详页的 <code>shopPowerRate</code>（如 4.6）不同，两者不可混用。本榜一律使用列表页口径。</td></tr>
-          <tr><td class="n">4</td><td><b>样本已被平台预筛</b></td>
-            <td>能进美食频道前 10 页的本身就是平台按热度挑过的优质店。所以「150 家全部 3.5 分以上」「最低评论数 1384」是<b>筛选结果</b>，不是全北京的真实分布。本榜不能代表北京餐饮整体水平。</td></tr>
-          <tr><td class="n">5</td><td><b>商圈 ≠ 行政区</b></td>
-            <td><code>district</code> 是平台商圈标签（如「三里屯/工体」），粒度比行政区细，且存在跨区重名。区域统计只能作横向参考，不能与行政区数据对齐。</td></tr>
-          <tr><td class="n">6</td><td><b>品牌限额改变了榜单构成</b></td>
-            <td>Top100 是「按分数排序后按品牌去重」的结果，不是纯分数前 100。部分高分门店被同品牌旗舰店挤出，换来了 100 个不同品牌的覆盖面。</td></tr>
-          <tr><td class="n">7</td><td><b>菜系归并带主观性</b></td>
-            <td>58 个细分品类压成 9 个菜系，规则在 <code>config/cuisine_map.yaml</code> 里按顺序匹配。例如「日式烧烤/烤肉」归烧烤而非日韩，理由是顾客搜索时找的是「烤肉」这个吃法。换一套规则，菜系维度的进榜率会变。</td></tr>
+          <tr>
+            <td class="name">可复现</td>
+            <td>重跑 parser.py</td>
+            <td>生成的 CSV 与交付版本逐字节一致，13894 字节，SHA-256 前 16 位 <code>faf7f4894ffbba9d</code>。连跑两次 build_ranking.py，top100.csv 的 SHA 也相同。</td>
+          </tr>
+          <tr>
+            <td class="name">交叉验证</td>
+            <td>换一条解析路径重抽</td>
+            <td>按 li 边界切块、用 data-click-name 定位、从锚点 title 取名。6 个字段 × 150 家共 900 个值，差异 0 个。</td>
+          </tr>
+          <tr>
+            <td class="name">端到端</td>
+            <td>本站构建时重算流水线</td>
+            <td>用等价实现跑完过滤、归一化、加权、排序、品牌去重，与 top100.csv 名次 100/100 一致，final_score 最大误差 5×10⁻⁷，属浮点舍入。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note plain" style="margin-top:24px;max-width:80ch">
+      <b>一处需要说清的口径差异。</b>成员 1 的抽样文件 <code>member1_field_check.json</code> 与当前 raw 目录只有 134/150 个 shop_id 能对上，另有 16 个对不上。
+      逐条核对后判定是两次采集之间榜单变动导致的：解析独有的 16 个 ID 全部在原始页面中存在，参考文件独有的 16 个全部不存在，
+      结果完全对称，不可能是解析错位。重合部分 804 个字段值里只有 1 处差异，评论数 9426 与 9412，符合评论数随时间增长的方向。
+      所以准确的表述是「与独立实现 900 个字段值完全一致；成员 1 的抽样文件为早期快照」。
+    </div>
+  </div>
+</section>
+
+<section class="section band">
+  <div class="wrap">
+    <div class="h2blk">
+      <div class="rule"></div>
+      <h2>七条局限</h2>
+      <p>这份榜不能用来回答什么。七条会原样写进报告。</p>
+    </div>
+
+    <div class="tbox">
+      <table class="tb">
+        <thead><tr><th style="width:40px">#</th><th style="width:200px">局限</th><th>影响</th></tr></thead>
+        <tbody>
+          <tr><td class="n">1</td><td class="name">单一时点快照</td>
+            <td>2026 年 10 月 15 日一次采集，没有时间序列。算不了评论增速，看不出趋势，也判断不出一家店在上升还是衰退。</td></tr>
+          <tr><td class="n">2</td><td class="name">缺少客流量维度</td>
+            <td>平台不公开月售，模型只有评分与评论数两维。「谁更热门」这个问题，这份榜只能间接回答。</td></tr>
+          <tr><td class="n">3</td><td class="name">列表页星级只有 0.5 档</td>
+            <td>与店铺详页的 shopPowerRate（例如 4.6）口径不同，两者不能混用。这份榜一律用列表页口径。</td></tr>
+          <tr><td class="n">4</td><td class="name">样本已被平台预筛</td>
+            <td>能进美食频道前十页的本身就是平台按热度挑过的店。所以「150 家全部 3.5 分以上」「最低评论数 1384」是筛选结果，不是北京餐饮的真实分布。</td></tr>
+          <tr><td class="n">5</td><td class="name">商圈不等于行政区</td>
+            <td>district 是平台商圈标签（例如三里屯/工体），粒度比行政区细，还有跨区重名。区域统计只能横向参考。</td></tr>
+          <tr><td class="n">6</td><td class="name">品牌限额改变了构成</td>
+            <td>Top100 是按分数排序后按品牌去重的结果，不是纯分数前 100。11 家满分店被同品牌旗舰店挤出。</td></tr>
+          <tr><td class="n">7</td><td class="name">菜系归并带主观性</td>
+            <td>58 个细分品类压成 9 个菜系，规则在 <code>config/cuisine_map.yaml</code> 里按顺序匹配。例如日式烧烤归烧烤而非日韩，因为顾客搜索时找的是「烤肉」。换一套规则，菜系进榜率会变。</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 </section>
 
-<section class="tint">
-  <div class="wrap wrap-narrow">
-    <div class="sec-head">
-      <div class="kicker">答辩追问</div>
-      <h2>五个最可能被问到的问题</h2>
-      <p>按预设分工，每个问题都有明确的回答人。这里给出所有答案，方便互相补位。</p>
+<section class="section">
+  <div class="wrap">
+    <div class="h2blk">
+      <div class="rule"></div>
+      <h2>五个常被问到的问题</h2>
     </div>
 
-    <details class="q" open><summary>Top100 的排序依据到底是什么？</summary>
-      <div class="a"><p>双维度加权：<code>0.625 × minmax(评分) + 0.375 × minmax(ln(1+评论数))</code>。
-      但完整答案是<b>三道闸门</b>：先过评论数门槛 2000（150→148），再按加权分排序（同分依次比评分、评论数、店名），
-      最后按品牌去重、每家限 1 席，取前 100。所以「Top100 是纯分数前 100」这个理解是不准确的。</p>
-      <p><b>回答人</b>：杨博尧（建模）</p></div>
-    </details>
-
-    <details class="q"><summary>客流量数据是从哪来的？</summary>
-      <div class="a"><p><b>没有。</b>这正是要主动说明的地方。我们验证了三个候选代理指标：月售在列表页、详页、以及详页内嵌的 10 个 API（共 310 个字段）里命中数全部为 0；
-      评论增速需要的开店日期同样不存在；人均分位与客流没有因果关系。三个指标两个拿不到、一个不成立，
-      因此整个维度被删除，权重按原 5:3 等比放大到 0.625/0.375。</p>
-      <p><b>回答人</b>：杨博尧（建模）／ 韦继丞（验证）</p></div>
-    </details>
-
-    <details class="q"><summary>为什么要加品牌限额？这不是在人为干预榜单吗？</summary>
-      <div class="a"><p>是干预，而且是明确说明的干预。不加限额时 100 个榜位只有 85 个品牌，四季民福一家占 6 席——
-      榜单会变成「连锁旗舰店榜」。限 1 席后 100 个榜位对应 100 个品牌，<b>第一名不变</b>，
-      覆盖面（47 个品类 / 9 个菜系）反而更完整。
-      代价是有几家高分门店被同品牌旗舰店挤出，这一点在局限声明第 6 条里写明了。</p>
-      <p><b>回答人</b>：杨博尧（建模）</p></div>
-    </details>
-
-    <details class="q"><summary>遇到反爬是怎么解决的？字体加密是怎么破的？</summary>
-      <div class="a"><p><b>反爬</b>四件事：带登录态 Cookie（游客态会被跳到 <code>verify.meituan.com</code>）；
-      随机 2–5 秒限速；风控判定不看状态码（拦截时仍返回 200），改用页面大小和关键词双判据；
-      识别到拦截立刻 <code>break</code> 停止。实测 10 页零拦截。<br>
-      <b>字体加密</b>不用破——实测当前页面加密实体数为 0，店名是明文 <code>&lt;h4&gt;</code>、评分写在 CSS 类名里。
-      两个脚本各放了一个探针独立确认，结论一致，原计划的 <code>font_decode.py</code> 被废弃。</p>
-      <p><b>回答人</b>：韦继丞（采集）／ 王喆（解析）</p></div>
-    </details>
-
-    <details class="q"><summary>数据有什么局限？</summary>
-      <div class="a"><p>七条，见上一节。最关键的三条：<b>单一时点快照</b>（无法算趋势与增速）、
-      <b>样本已被平台预筛</b>（前 10 页本身就是优质店，不能代表北京餐饮整体）、
-      <b>品牌限额改变了榜单构成</b>（Top100 不是纯分数前 100）。
-      此外评分只有四个取值档、过半数门店并列最高档，这一维度的区分能力被数据本身限制；
-      但它仍然构成一道有效门槛——满分店进榜率 86%，非满分店 45%，4.0 分及以下为 0%。</p>
-      <p><b>回答人</b>：管雄晖（可视化与报告）</p></div>
-    </details>
+    <div class="qa">
+      <details>
+        <summary>Top100 的排序依据到底是什么</summary>
+        <div class="ans"><p>双维度加权：0.625 乘归一化评分，加 0.375 乘归一化对数评论数。但完整答案是三道闸门：先过评论数门槛 2000，再按加权分排序，最后按品牌去重每家留一席，取前 100。所以「纯分数前 100」这个理解并不准确。</p></div>
+      </details>
+      <details>
+        <summary>客流量数据是从哪来的</summary>
+        <div class="ans"><p>没有。三个候选代理指标里，月售在列表页、详页、以及详页内嵌的 10 个接口共 310 个字段里命中数都是 0；评论增速需要的开店日期也不存在；人均分位与客流没有因果关系。两个拿不到、一个不成立，整个维度被删掉，权重按原 5:3 比例放大到 0.625 与 0.375。</p></div>
+      </details>
+      <details>
+        <summary>加品牌限额算不算人为干预榜单</summary>
+        <div class="ans"><p>算，而且是说明白了的干预。不加限额时 100 个榜位只有 85 个品牌，四季民福一家占 6 席，榜单会变成连锁旗舰店集合。限一席之后 100 个榜位对应 100 个品牌，第一名不变，覆盖面反而更完整。代价是 11 家满分店被挤出去，这条写在局限第 6 条。</p></div>
+      </details>
+      <details>
+        <summary>数据有什么局限</summary>
+        <div class="ans"><p>七条，见上一节。最要紧的三条是：单一时点快照，算不了趋势；样本已被平台预筛，前十页本身就是优质店，代表不了北京餐饮整体；品牌限额改变了榜单构成，Top100 不是纯分数前 100。另外评分只有四个取值档，过半门店并列最高档，这个维度的区分能力被数据本身限制，但它仍构成一道有效门槛。</p></div>
+      </details>
+      <details>
+        <summary>如果换一批数据重跑，结论会一样吗</summary>
+        <div class="ans"><p>榜单会变，结构性的结论大概率还在。评分门槛效应来自列表页星级只有 0.5 档这个事实，换成同城另一品类，档位结构不会变；权重只值 4 到 7 家、筛选条件值 15 家这个量级关系，取决于连锁品牌密度，换城市可能会变。这一条没有验证过，因为只有一次采集。</p></div>
+      </details>
+    </div>
   </div>
 </section>
 
-<section>
-  <div class="wrap wrap-narrow">
-    <div class="sec-head">
-      <div class="kicker">合规</div>
-      <h2>采集边界与数据处理声明</h2>
+<section class="section tight">
+  <div class="wrap narrow">
+    <div class="h2blk">
+      <div class="rule"></div>
+      <h2>采集边界</h2>
     </div>
-    <div class="card">
-      <ul style="font-size:14.5px;margin-bottom:0">
-        <li>本数据<b>仅用于课程研究</b>，不公开分发、不用于商业用途。</li>
-        <li>采集全程保留限速逻辑（每页 2–5 秒随机间隔），未对目标站点造成压力；实测 10 页共 42 秒。</li>
-        <li>仅采集公开可见的列表页信息（店名、评分、评论数、人均、品类、商圈），不涉及任何用户个人信息。</li>
-        <li>脚本只读取页面，不进行任何写操作；重复运行无副作用。</li>
-        <li>提交物中<b>不包含任何 Cookie、代理凭据或登录信息</b>；<code>.gitignore</code> 已排除 <code>raw/</code>、<code>*.db</code>、<code>cookie.txt</code>。</li>
-        <li>数据采集日期 <b>2026-10-15</b> 已在报告与本网站所有页面标注。</li>
-      </ul>
+    <div class="note plain">
+      <p>数据仅用于课程研究，不对外分发、不做商业用途。采集全程保留限速，每页 2 到 5 秒随机间隔，实测十页共 42 秒。
+      只采集公开可见的列表页字段，不涉及用户个人信息。脚本只读取页面，不写任何东西，重复运行没有副作用。
+      提交物里不含 Cookie、代理凭据或登录信息，<code>.gitignore</code> 已排除 <code>raw/</code>、<code>*.db</code>、<code>cookie.txt</code>。
+      采集日期 2026-10-15 在报告与本站所有页面都有标注。</p>
     </div>
   </div>
 </section>
 
 </main>
 
-<footer>
-  <div class="wrap row">
-    <span><b>北京餐厅 Top100</b> · 大众点评数据流水线</span>
-    <span>数据采集 <b>2026-10-15</b></span>
-    <span>仅用于课程研究，不公开分发</span>
-    <span class="sep"></span>
-    <span>页面不含任何 Cookie / 代理凭据</span>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <span><b>北京餐厅 Top100</b></span>
+    <span>采集 2026-10-15</span>
+    <span>仅用于课程研究，不对外分发</span>
+    <span class="sp"></span>
+    <span>页面不含 Cookie 与代理凭据</span>
     <span>© <span id="year">2026</span></span>
   </div>
 </footer>
 
-<script src="assets/data.js?v=2"></script>
-<script src="assets/app.js?v=2"></script>
+<script src="assets/data.js?v=3"></script>
+<script src="assets/app.js?v=3"></script>
 </body>
 </html>
