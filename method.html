@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>口径 · 北京餐厅 Top100</title>
 <meta name="description" content="评分模型、三道筛选闸门、权重变更的论证，以及这份榜单的七条局限。">
-<link rel="stylesheet" href="assets/base.css?v=4">
+<link rel="stylesheet" href="assets/base.css?v=5">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%231B4B72'/><text x='16' y='23' font-size='17' font-family='Georgia,serif' font-weight='700' fill='white' text-anchor='middle'>京</text></svg>">
 </head>
 <body data-page="method">
@@ -32,6 +32,11 @@
         分数怎么算、权重为什么改、是谁真正在改变排名，以及这份榜在哪些地方不该被相信。
         最后一部分主动交代局限。与其等别人问，不如先写下来。
       </p>
+      <p class="en">
+        How the score is computed, why the weights changed, what actually moves the ranking,
+        and where this list should not be trusted. The limitations are stated up front rather
+        than left for someone else to find.
+      </p>
     </div>
     <div class="sheet">
       <div><span>评分权重</span><b>0.625</b></div>
@@ -49,6 +54,9 @@
       <div class="rule"></div>
       <h2>公式</h2>
       <p>模型本身很简单，复杂的是为什么只有这两个维度、为什么是这两个权重。公式放在这里，任何人都能拿原始 CSV 重算出同一张榜。</p>
+      <p class="en">The model is simple; the hard part is why only two dimensions survived and why
+        these two weights. The formula is published here so that anyone can recompute the same
+        ranking from the original CSV.</p>
     </div>
 
     <div class="formula">
@@ -304,6 +312,9 @@
       <div class="rule"></div>
       <h2>七条局限</h2>
       <p>这份榜不能用来回答什么。七条会原样写进报告。</p>
+      <p class="en">Seven things this ranking cannot answer. They appear verbatim in the report.
+        The map on the ranking page carries one more: its coordinates are district-level
+        approximations, not store locations.</p>
     </div>
 
     <div class="tbox">
@@ -390,7 +401,7 @@
   </div>
 </footer>
 
-<script src="assets/data.js?v=4"></script>
-<script src="assets/app.js?v=4"></script>
+<script src="assets/data.js?v=5"></script>
+<script src="assets/app.js?v=5"></script>
 </body>
 </html>
