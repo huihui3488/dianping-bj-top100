@@ -3,341 +3,305 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>成果 · 北京餐厅 Top100</title>
-<meta name="description" content="100 家入榜门店全量明细、七张图表，以及可现场重算整个口径的榜单实验台。">
-<link rel="stylesheet" href="assets/base.css?v=2">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23DD4B22'/><text x='16' y='23' font-size='18' font-family='sans-serif' font-weight='700' fill='white' text-anchor='middle'>京</text></svg>">
+<title>榜单 · 北京餐厅 Top100</title>
+<meta name="description" content="100 家入榜门店明细、六张图表，以及可以现场改口径的模拟器。">
+<link rel="stylesheet" href="assets/base.css?v=3">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%231B4B72'/><text x='16' y='23' font-size='17' font-family='Georgia,serif' font-weight='700' fill='white' text-anchor='middle'>京</text></svg>">
 </head>
 <body data-page="results">
 
-<header class="topbar">
-  <div class="wrap topbar-inner">
-    <a class="brand" href="index.html"><b>北京餐厅 Top100</b><span>Dianping&nbsp;/&nbsp;BJ</span></a>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="mark" href="index.html">北京餐厅 Top100<i>2026</i></a>
     <nav class="nav">
-      <a href="index.html">总览</a>
-      <a href="results.html" class="on">成果</a>
+      <a href="index.html">概览</a>
+      <a href="results.html" aria-current="page">榜单</a>
       <a href="code.html">代码</a>
-      <a href="method.html">口径与局限</a>
+      <a href="method.html">口径</a>
     </nav>
   </div>
 </header>
 
 <main>
 
-<section class="hero" style="padding-bottom:36px">
-  <div class="wrap">
-    <div class="kicker">成果 · 成员 3 定稿口径</div>
-    <h1 style="font-size:clamp(32px,4.4vw,52px)">100 个榜位，<br>100 个不同品牌</h1>
-    <p class="lead">
-      150 家候选过三道闸门：评论数门槛 2000 → 双维度加权排序 → 品牌限额每家 1 席。
-      最终 100 家入榜，覆盖 47 个细分品类、9 个菜系、48 个商圈。
-      下面的每一张图后面都跟了一句<b>读图结论</b>——图是证据，那句话才是要点。
-    </p>
-    <div class="chips">
-      <span class="chip ok"><i></i>入榜 <b data-num="stats.n_top">100</b> / 候选 <b data-num="stats.n">150</b></span>
-      <span class="chip ok"><i></i>品牌数 <b data-num="meta.boundary.brands">100</b></span>
-      <span class="chip ok"><i></i>评分权重 <b data-w="w_rating">0.625</b></span>
-      <span class="chip warn"><i></i>入榜构成 <b data-num="meta.boundary.n5">68</b> 家 5.0 ＋ <b data-num="meta.boundary.n45">32</b> 家 4.5</span>
+<div class="head">
+  <div class="wrap head-grid">
+    <div>
+      <h1>榜单</h1>
+      <p class="lede">
+        150 家候选先过评论数门槛，再按双维度加权排序，最后按品牌去重，每家留一席。
+        结果是 100 家店、100 个品牌，覆盖 47 个细分品类、9 个菜系、48 个商圈。
+      </p>
+    </div>
+    <div class="sheet">
+      <div><span>入榜</span><b>100<small>/ 150</small></b></div>
+      <div><span>5.0 分门店</span><b>68</b></div>
+      <div><span>4.5 分门店</span><b>32</b></div>
+      <div><span>最低入榜评分</span><b>4.5</b></div>
+      <div><span>品牌数</span><b>100</b></div>
     </div>
   </div>
-</section>
+</div>
 
-<section style="padding-top:0;border-top:0">
+<section class="section" style="border-top:0;padding-top:0">
   <div class="wrap">
-    <div class="podium" id="podium"></div>
-
-    <div class="note grey">
-      <span class="tag">口径来源 · 成员 3 定稿</span>
-      <p>本页数据读取 <code>data/top100.csv</code>（100 行 × 14 字段），口径参数来自 <code>config/scoring.yaml</code>：
-      <b>综合分 = 0.625 × minmax(评分) + 0.375 × minmax(ln(1+评论数))</b>，评论门槛 2000，品牌限额每家 1 席，榜单长度 100。
-      权重两项合计必须为 1.0，<code>build_ranking.py</code> 启动时硬校验。
-      本站在构建阶段用同样的流水线重算了一遍，<b>名次 100/100 完全一致</b>。<a href="method.html">公式与论证 →</a></p>
-    </div>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">全量明细</div>
-      <h2>Top100 榜单</h2>
-      <p>点表头可排序，支持按店名 / 品牌 / 品类 / 商圈搜索，也可按评分档、商圈、菜系筛选。第 101 名之后为落榜候选，一并列出便于核对。</p>
-    </div>
-
-    <div class="toolbar">
-      <div class="field">
+    <div class="row">
+      <div class="fld">
         <label for="fSearch">搜索</label>
-        <input id="fSearch" type="search" placeholder="店名 / 品牌 / 品类 / 商圈">
+        <input id="fSearch" type="search" placeholder="店名、品牌、品类、商圈">
       </div>
-      <div class="field">
+      <div class="fld">
         <label for="fRating">评分</label>
         <select id="fRating">
           <option value="">全部</option>
-          <option value="5">5.0 分（79）</option>
-          <option value="4.5">4.5 分（46）</option>
-          <option value="4">4.0 分（24）</option>
-          <option value="3.5">3.5 分（1）</option>
+          <option value="5">5.0（79）</option>
+          <option value="4.5">4.5（46）</option>
+          <option value="4">4.0（24）</option>
+          <option value="3.5">3.5（1）</option>
         </select>
       </div>
-      <div class="field">
+      <div class="fld">
         <label for="fDistrict">商圈</label>
         <select id="fDistrict"><option value="">全部</option></select>
       </div>
-      <div class="field">
+      <div class="fld">
         <label for="fCuisine">菜系</label>
         <select id="fCuisine"><option value="">全部</option></select>
       </div>
       <span class="spacer"></span>
-      <div class="chips">
-        <button class="chip on" data-scope="100">只看 Top100</button>
-        <button class="chip" data-scope="0">全部 150</button>
+      <div class="seg">
+        <button data-scope="100" aria-pressed="true">Top100</button>
+        <button data-scope="0" aria-pressed="false">全部 150</button>
       </div>
-      <span class="count" id="rankCount"></span>
+      <span class="tally" id="rankCount"></span>
     </div>
 
-    <div class="tbl-wrap" style="max-height:660px">
-      <table class="tbl rank-tbl">
+    <div class="tbox scroll">
+      <table class="tb rank-tb">
         <thead id="rankHead">
           <tr>
-            <th class="n" data-k="rank" style="width:58px">名次</th>
+            <th class="n" data-k="rank" style="width:54px">名次</th>
             <th data-k="name">门店</th>
-            <th data-k="rating" style="width:118px">评分</th>
-            <th class="n" data-k="review_count" style="width:92px">评论数</th>
-            <th class="n" data-k="avg_price" style="width:78px">人均</th>
-            <th style="width:100px">菜系</th>
-            <th style="width:130px">商圈</th>
-            <th class="n" data-k="final_score" style="width:82px">综合分</th>
-            <th style="width:110px">相对榜首</th>
+            <th class="n" data-k="rating" style="width:64px">评分</th>
+            <th class="n" data-k="review_count" style="width:88px">评论数</th>
+            <th class="n" data-k="avg_price" style="width:70px">人均</th>
+            <th style="width:86px">菜系</th>
+            <th style="width:132px">商圈</th>
+            <th class="n" data-k="final_score" style="width:80px">综合分</th>
           </tr>
         </thead>
         <tbody id="rankBody"></tbody>
       </table>
     </div>
+    <p style="margin-top:14px;font-size:12.5px;color:var(--ink-3)">
+      第 101 名之后为落榜候选，一并列出便于核对。落榜行的名次与综合分显示为短横。
+    </p>
   </div>
 </section>
 
-<section class="tint">
+<section class="section band">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">七张图</div>
-      <h2>榜单长什么样，为什么长这样</h2>
-      <p>前三张讲排序结构，中间两张讲供给结构，后两张讲数据本身的形状——最后两张其实是在回答「评分这个维度到底起没起作用」。</p>
+    <div class="h2blk">
+      <div class="rule"></div>
+      <h2>六张图</h2>
+      <p>前三张看排序结构，中间两张看供给结构，最后一张看数据的形状。每张图后面那句话才是要点。</p>
     </div>
 
-    <div class="charts">
+    <div class="plates">
 
-      <div class="chart full">
-        <header>
-          <h3>综合分 Top15 · 分数是怎么拼出来的</h3>
-          <div class="sub">每根条由两段组成：橙色是评分贡献（0.625 × n），青色是评论数贡献（0.375 × n）</div>
-        </header>
-        <div id="cTop15"></div>
+      <figure class="plate">
+        <div class="plate-body"><div id="cTop15"></div></div>
         <div class="legend">
-          <span><i style="background:#DD4B22"></i>评分贡献 · 0.625 × n(评分)</span>
-          <span><i style="background:#2A6C60"></i>评论数贡献 · 0.375 × n(ln(1+评论))</span>
+          <span><i style="background:#1B4B72"></i>评分贡献 0.625 × n(评分)</span>
+          <span><i style="background:#A9713F"></i>评论贡献 0.375 × n(ln 1+评论数)</span>
         </div>
+        <figcaption>
+          <span class="num">图 1</span>综合分前十五名，以及每一分的两段来源。
+        </figcaption>
         <div class="read">
-          <b>读图结论：</b>前 15 名全部是 5.0 分门店，橙色段长度完全一致——评分在这一段里<b>不产生任何区分</b>，
-          名次高低全部由青色段决定。所以「权重调多少」对头部几乎没有影响，真正的战场在榜单中段。
+          前十五名都是满分店，蓝段一样长，名次高低全看赭段。
+          <b>在头部，权重怎么调都不改变次序</b>，因为评分这一项它们的归一化值都是 1.0。
         </div>
-      </div>
+      </figure>
 
-      <div class="chart full">
-        <header>
-          <h3>评分 × 评论数 · 150 家候选全景</h3>
-          <div class="sub">实心 = 入榜，空心 = 落榜；气泡大小 = 人均价格；红色虚线为评论数门槛 2000</div>
-        </header>
-        <div id="cScatter"></div>
+      <figure class="plate">
+        <div class="plate-body"><div id="cScatter"></div></div>
         <div class="legend">
-          <span><i style="background:#DD4B22"></i>入榜 · 5.0 分（68）</span>
-          <span><i style="background:#E8843D"></i>入榜 · 4.5 分（32）</span>
-          <span><i style="background:#fff;border:1px solid #B9B2A5"></i>落榜（50）</span>
+          <span><i style="background:#1B4B72"></i>入榜 · 5.0 分（68）</span>
+          <span><i style="background:#A9713F"></i>入榜 · 4.5 分（32）</span>
+          <span><i style="background:#fff;border:1px solid #BFB9AC"></i>落榜（50）</span>
         </div>
+        <figcaption>
+          <span class="num">图 2</span>150 家候选的评分与评论数。实心为入榜，空心为落榜，圆的大小是人均价格，横虚线是 2,000 条的评论门槛。
+        </figcaption>
         <div class="read">
-          <b>读图结论：</b>两个现象同时可见。① 评分轴上只有四条竖列（列表页星级只能取 0.5 档），
-          <b>4.0 分及以下的 25 家全部落榜</b>，进榜率 0%。② 5.0 分那一列里仍有空心点——
-          <b>满分店共 11 家落榜</b>，且全部因同品牌限额被挤出（四季民福另有 3 家、Tomacado 花厨另有 2 家）。
-          这张图同时解释了「评分门槛」和「品牌去重」两个筛选动作。左上方那个被框住的点，是评论数全站第一却只排第 41 名的门店。
+          评分轴上只有四条竖列，因为列表页星级只能取 0.5 档。
+          <b>4.0 分及以下的 25 家全部在空心区</b>；5.0 那一列也有空心点，是 11 家被同品牌旗舰店挤掉的满分店，
+          其中四季民福另有 3 家、Tomacado 花厨另有 2 家。左上被框住的那个点评论数全站第一，最终排第 41 名。
         </div>
-      </div>
+      </figure>
 
-      <div class="chart full">
-        <header>
-          <h3>菜系构成 · 全量 150 家 vs 入榜 100 家</h3>
-          <div class="sub">58 种细分品类归并为 9 个菜系；柱下小字为该菜系的进榜率</div>
-        </header>
-        <div id="cCuisine"></div>
+      <figure class="plate">
+        <div class="plate-body"><div id="cCuisine"></div></div>
         <div class="legend">
-          <span><i style="background:#DFD9CE"></i>全量候选</span>
-          <span><i style="background:#2A6C60"></i>最终入榜</span>
+          <span><i style="background:#DDD9CE"></i>全量候选</span>
+          <span><i style="background:#1B4B72"></i>最终入榜</span>
         </div>
+        <figcaption>
+          <span class="num">图 3</span>九个菜系的全量家数与入榜家数。柱下小字是该菜系的进榜率。
+        </figcaption>
         <div class="read">
-          <b>读图结论：</b>火锅进榜率 <b>82%</b>、烧烤烤肉 83%、西餐 75%，而自助餐只有 <b>20%</b>（5 家里仅 1 家）。
-          两个原因都能在数据里对上：火锅的平均评论数是 9 个菜系里最高的（<b>2.56 万条</b>），
-          自助餐的平均评分是最低的（<b>4.20 分</b>，5 家里只有 1 家满分）。
-          榜单在菜系层面明显不是均匀分布，而是由「评分高 + 评论多」的业态主导。
+          火锅 82%、烧烤烤肉 83%、西餐 75%，自助餐只有 20%。
+          两个原因都能在数据里对上：火锅平均评论数 2.56 万条，是九类里最高的；
+          自助餐平均评分 4.20 分，是九类里最低的，五家里只有一家满分。
         </div>
-      </div>
+      </figure>
 
-      <div class="chart">
-        <header>
-          <h3>菜系进榜率排序</h3>
-          <div class="sub">进榜家数 / 该菜系候选家数</div>
-        </header>
-        <div id="cCuisineRate"></div>
-        <div class="read"><b>读图结论：</b>东南亚菜与创意菜 3+2 家全部入榜（样本太小，仅作参考）；
-        <b>自助餐 20% 是唯一低于 25% 的菜系</b>，这个差距无法用随机波动解释。</div>
-      </div>
-
-      <div class="chart">
-        <header>
-          <h3>Top100 商圈分布 Top10</h3>
-          <div class="sub">入榜门店共落在 48 个商圈；全量 150 家候选覆盖 62 个</div>
-        </header>
-        <div id="cDistrict"></div>
-        <div class="read"><b>读图结论：</b>三里屯/工体 11 家、王府井/东单 9 家、亮马桥/三元桥 6 家，前三个商圈占 26%。
-        但集中度并不高——<b>前 10 个商圈合计只占入榜的 49%</b>，48 个商圈里有 <b>27 个只有 1 家店</b>，长尾拖得很长。</div>
-      </div>
-
-      <div class="chart full">
-        <header>
-          <h3>评分档 × 进榜率 · 评分到底起没起作用</h3>
-          <div class="sub">每根柱分两段：橙色为入榜，灰色为落榜；柱顶数字为进榜率</div>
-        </header>
-        <div id="cRating"></div>
+      <figure class="plate">
+        <div class="plate-body"><div id="cDistrict"></div></div>
+        <figcaption>
+          <span class="num">图 4</span>入榜门店分布最多的十个商圈。全量候选共覆盖 62 个商圈。
+        </figcaption>
         <div class="read">
-          <b>读图结论：</b>这是全站信息量最大的一张图。<b>5.0 分进榜率 86%，4.5 分 70%，4.0 分 0%。</b>
-          评分虽然只有四个取值档、区分度低，但它在榜单上的作用<b>不是「连续打分」而是「一道硬门槛」</b>：
-          非满分店的进榜率不到满分店的一半，而 4.0 分及以下直接被清零。
-          把权重从 0.625 降到 0.20，满分店仍占 58% 的榜位——<b>这个门槛不是线性权重能调掉的</b>。
+          三里屯/工体 11 家、王府井/东单 9 家、亮马桥/三元桥 6 家。
+          但集中度不算高：<b>前十个商圈合计只占入榜的 49%</b>，48 个商圈里有 27 个只有一家店。
         </div>
-      </div>
+      </figure>
 
-      <div class="chart">
-        <header>
-          <h3>入榜门店人均价格带</h3>
-          <div class="sub">入榜 100 家：¥63 – ¥1500，中位 ¥150；全量 150 家为 ¥28 – ¥1580</div>
-        </header>
-        <div id="cPrice"></div>
+      <figure class="plate">
+        <div class="plate-body"><div id="cRating"></div></div>
+        <figcaption>
+          <span class="num">图 5</span>按评分档分组的进榜率。蓝段为入榜，灰段为落榜。
+        </figcaption>
         <div class="read">
-          <b>读图结论：</b>入榜门店的价格重心在 <b>¥100–150</b>（38 家），<b>半数人均在 ¥150 以下</b>，
-          且没有任何一家人均低于 ¥60；¥350 以上的高端店仍有 15 家。
-          <code>ln(评论数)</code> 与人均价格的相关系数为 <b data-num="meta.corr.logreview_price">-0.42</b>：
-          评论多的店普遍更便宜。这也是人均<b>没有</b>进入模型的原因——加进去会和评论数互相打架，并系统性惩罚高端店。
+          这是六张图里信息量最大的一张。<b>5.0 分门店进榜率 86%，4.5 分 70%，4.0 分 0%。</b>
+          评分只有四个取值档，区分度确实低，但它在榜单上起的是门槛作用：非满分店的进榜率不到满分店的一半，
+          4.0 分及以下直接被清零。把权重压到 0.20，满分店仍占 58 个榜位，说明这道门槛不是权重能调掉的。
         </div>
-      </div>
+      </figure>
+
+      <figure class="plate">
+        <div class="plate-body"><div id="cPrice"></div></div>
+        <figcaption>
+          <span class="num">图 6</span>入榜门店的人均价格带。入榜区间 63 元到 1500 元，中位 150 元；全量候选为 28 元到 1580 元。
+        </figcaption>
+        <div class="read">
+          入榜门店的价格重心在 100 到 150 元之间，共 38 家。<b>半数人均在 150 元以下</b>，
+          没有一家低于 60 元；350 元以上的高端店还有 15 家。
+          评论数与人均的相关系数是 -0.42，评论多的店普遍更便宜。人均没有进入模型，
+          原因就在这里：加进去会和评论数互相打架，并系统性惩罚高端店。
+        </div>
+      </figure>
 
     </div>
   </div>
 </section>
 
-<section>
+<section class="section">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">现场可演示</div>
-      <h2>口径实验台：把 build_ranking.py 搬到浏览器里</h2>
-      <p>下面三个旋钮就是 <code>config/scoring.yaml</code> 的三个参数。拖动后整条流水线会在浏览器里重算一遍，
-      与后端脚本等价（已在构建阶段校验：定稿参数下名次 100/100 一致）。</p>
+    <div class="h2blk">
+      <div class="rule"></div>
+      <h2>换个口径看看</h2>
+      <p>下面三个旋钮就是 <code>config/scoring.yaml</code> 的三个参数。整条流水线在浏览器里重算，
+         与 <code>build_ranking.py</code> 等价：定稿参数下名次 100/100 一致。</p>
     </div>
 
-    <div class="sim">
-      <div class="sim-top">
+    <div class="trial">
+      <div class="trial-ctl">
         <div>
-          <div class="lbl">评分权重 <code>w</code></div>
+          <div class="lab">评分权重 w</div>
           <div class="val"><span id="wShow">0.625</span></div>
         </div>
         <div>
-          <div class="lbl">评论数权重 <code>1 − w</code></div>
-          <div class="val" style="color:var(--teal)"><span id="wrShow">0.375</span></div>
+          <div class="lab">评论数权重 1 − w</div>
+          <div class="val" style="color:#A9713F"><span id="wrShow">0.375</span></div>
         </div>
         <div style="flex:1;min-width:240px">
-          <input id="wSlider" type="range" min="100" max="1000" step="5" value="625"
-                 style="--pct:62.5%" aria-label="评分权重">
-          <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-4);margin-top:2px">
-            <span>0.100 完全看评论</span><span>1.000 完全看评分</span>
+          <input id="wSlider" type="range" min="100" max="1000" step="5" value="625" aria-label="评分权重">
+          <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-3)">
+            <span>0.100</span><span>1.000</span>
           </div>
         </div>
         <div>
-          <div class="lbl">品牌限额 <code>max_per_brand</code></div>
-          <select id="fBrand" class="field" style="height:40px;padding:0 12px;font:inherit;font-size:14px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)">
+          <div class="lab">品牌限额</div>
+          <select id="fBrand">
             <option value="0">不限</option>
             <option value="2">每家 2 席</option>
-            <option value="1" selected>每家 1 席（定稿）</option>
+            <option value="1" selected>每家 1 席</option>
           </select>
         </div>
         <div>
-          <div class="lbl">评论数门槛 <code>min_review_count</code></div>
-          <select id="fThr" class="field" style="height:40px;padding:0 12px;font:inherit;font-size:14px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)">
-            <option value="100">100（原设计）</option>
+          <div class="lab">评论数门槛</div>
+          <select id="fThr">
+            <option value="100">100</option>
             <option value="1000">1,000</option>
-            <option value="2000" selected>2,000（定稿）</option>
+            <option value="2000" selected>2,000</option>
             <option value="5000">5,000</option>
           </select>
         </div>
       </div>
 
-      <div class="sim-rows" id="simRows"></div>
+      <div class="simrows" id="simRows"></div>
 
-      <div class="sim-foot">
-        <div>入榜：<b id="simN">—</b></div>
-        <div>品牌数：<b id="simBrand">—</b></div>
-        <div>满分店：<b id="sim5">—</b></div>
-        <div>与定稿重合：<b id="simOverlap">—</b></div>
-        <div>换人：<b id="simChg">—</b></div>
-        <div>Top15 重合：<b id="simTop15">—</b></div>
-      </div>
-      <div class="sim-foot" style="border-top:0;padding-top:8px">
-        <div>当前第 1 名：<b id="simTop1">—</b></div>
-        <div><b id="simBaseline">当前＝定稿口径</b></div>
-        <div style="color:var(--gold)">● 黄底行为定稿 Top15 之外的新晋门店</div>
+      <div class="trial-out">
+        <span>入榜 <b id="simN">—</b></span>
+        <span>品牌 <b id="simBrand">—</b></span>
+        <span>满分店 <b id="sim5">—</b></span>
+        <span>与定稿重合 <b id="simOverlap">—</b></span>
+        <span>换人 <b id="simChg">—</b></span>
+        <span>Top15 重合 <b id="simTop15">—</b></span>
+        <span>第 1 名 <b id="simTop1">—</b></span>
+        <span><b id="simBaseline">等同定稿口径</b></span>
       </div>
     </div>
 
-    <div class="note teal" style="margin-top:22px">
-      <span class="tag">拖完之后应该得出的结论</span>
-      <p>把权重从 0.625 拉到 0.40，<b>Top15 里仍然只有极少数换位</b>——因为头部全是 5.0 分店，归一化后都等于 1.0，
-      权重怎么变都不影响它们的相对次序。真正让榜单换血的是<b>品牌限额</b>：
-      从「每家 1 席」改成「不限」，会直接换掉 15 家、品牌数从 100 掉到 85。
-      <b>「口径是否合理」这个问题，权重只值 3–7 家，筛选条件值 15 家。</b>这一点会被追问，务必先讲。</p>
+    <div class="note" style="margin-top:26px;max-width:74ch">
+      把权重从 0.625 拉到 0.40，前十五名几乎不动，但中段换位明显。
+      真正让榜单换血的是品牌限额：从每家 1 席改成不限，直接换掉 15 家，品牌数从 100 掉到 85。
+      「口径合不合理」这个问题，权重只值 4 到 7 家，筛选条件值 15 家。
     </div>
   </div>
 </section>
 
-<section class="tint">
+<section class="section band">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">对照实验</div>
+    <div class="h2blk">
+      <div class="rule"></div>
       <h2>每行只改一个变量</h2>
-      <p>对应 <code>python build_ranking.py --compare</code>。因为每行只改一处，所以「换了几家」可以干净地归因到那一个改动。</p>
+      <p>对应 <code>python build_ranking.py --compare</code>。因为每行只动一处，换掉几家可以直接归因到那一个改动。</p>
     </div>
-    <div class="tbl-wrap">
-      <table class="tbl">
+
+    <div class="tbox">
+      <table class="tb">
         <thead>
-          <tr><th>方案</th><th class="n" style="width:96px">品牌数</th><th class="n" style="width:96px">满分店</th><th class="n" style="width:110px">与定稿重合</th><th class="n" style="width:88px">换人</th></tr>
+          <tr>
+            <th>方案</th>
+            <th class="n" style="width:92px">品牌数</th>
+            <th class="n" style="width:92px">满分店</th>
+            <th class="n" style="width:110px">与定稿重合</th>
+            <th class="n" style="width:80px">换人</th>
+          </tr>
         </thead>
         <tbody id="compareBody"></tbody>
       </table>
     </div>
-    <p style="font-size:13px;color:var(--ink-4);margin-top:14px">
-      第一行为当前定稿口径。数据由构建脚本用与 <code>build_ranking.py</code> 等价的实现重算生成，非手工抄录。
-    </p>
   </div>
 </section>
 
 </main>
 
-<footer>
-  <div class="wrap row">
-    <span><b>北京餐厅 Top100</b> · 大众点评数据流水线</span>
-    <span>数据采集 <b>2026-10-15</b></span>
-    <span>仅用于课程研究，不公开分发</span>
-    <span class="sep"></span>
-    <span>页面不含任何 Cookie / 代理凭据</span>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <span><b>北京餐厅 Top100</b></span>
+    <span>采集 2026-10-15</span>
+    <span>仅用于课程研究，不对外分发</span>
+    <span class="sp"></span>
+    <span>页面不含 Cookie 与代理凭据</span>
     <span>© <span id="year">2026</span></span>
   </div>
 </footer>
 
-<script src="assets/data.js?v=2"></script>
-<script src="assets/app.js?v=2"></script>
+<script src="assets/data.js?v=3"></script>
+<script src="assets/app.js?v=3"></script>
 </body>
 </html>
