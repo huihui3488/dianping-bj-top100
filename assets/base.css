@@ -365,11 +365,94 @@ pre.code .t-op { color: #A6AFBA; }
 .foot .sp { flex: 1; }
 .foot b { color: var(--ink-2); font-weight: 700; }
 
+/* ------------------------------------------------------------------ 英文段 */
+/* 只用字体区分语言，不额外加标签或竖线：拉丁文走 Georgia，中文走雅黑 */
+.en {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 14.5px; line-height: 1.75;
+  color: var(--ink-3);
+  max-width: 62ch;
+  margin: 14px 0 0;
+}
+.en b { color: var(--ink-2); font-weight: 700; }
+.head .en { margin-top: 16px; }
+
+/* ------------------------------------------------------------------ 地图 */
+.mapgrid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 0; border-top: 2px solid var(--ink); }
+.mapcol { position: relative; border-right: 1px solid var(--rule); }
+.mapstage { position: relative; }
+#mapCanvas { width: 100%; height: 460px; background: var(--band); }
+.mapside { padding: 18px 0 0 22px; }
+
+.mapctl {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px;
+  padding: 12px 0; border-bottom: 1px solid var(--rule-2);
+}
+.mapctl button {
+  appearance: none; background: var(--paper); border: 1px solid var(--rule);
+  border-radius: 6px; height: 32px; padding: 0 12px; cursor: pointer;
+  font: inherit; font-size: 13px; color: var(--ink);
+}
+.mapctl button:hover { border-color: var(--ink-3); }
+.mapctl label { font-size: 12px; color: var(--ink-3); margin-right: 6px; }
+.mapctl input[type="range"] { width: 108px; height: 18px; vertical-align: -4px; }
+.mapctl select {
+  height: 32px; border: 1px solid var(--rule); border-radius: 6px;
+  background: var(--paper); font: inherit; font-size: 13px; color: var(--ink); padding: 0 8px;
+}
+
+.heat { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.heat i {
+  position: absolute; left: 0; top: 0; border-radius: 50%;
+  background: radial-gradient(circle, rgba(27,75,114,.85) 0%, rgba(27,75,114,.45) 42%, rgba(27,75,114,0) 70%);
+  will-change: transform, width, height;
+}
+.heat i.me {
+  width: 16px; height: 16px; margin: -8px 0 0 -8px;
+  background: #A9713F; border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #A9713F; opacity: 1;
+}
+.heat i.me.hidden { display: none; }
+
+.scalebar {
+  position: absolute; left: 14px; bottom: 14px; z-index: 3;
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--num); font-size: 11px; color: var(--ink-2);
+  background: rgba(255,255,255,.82); padding: 3px 7px; border-radius: 3px;
+}
+.scalebar u { display: block; height: 6px; border-left: 1px solid var(--ink); border-right: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+.readout {
+  position: absolute; right: 12px; bottom: 14px; z-index: 3;
+  font-family: var(--num); font-size: 11px; color: var(--ink-3);
+  background: rgba(255,255,255,.82); padding: 3px 7px; border-radius: 3px;
+}
+.maptip { position: absolute; left: 12px; top: 10px; z-index: 3; font-size: 12px; color: var(--ink-3);
+  background: rgba(255,255,255,.88); padding: 4px 8px; border-radius: 3px; max-width: 78%; }
+.mapfallback { padding: 34px 22px; font-size: 14px; color: var(--ink-2); background: var(--band); }
+.mapfallback b { display: block; color: var(--ink); margin-bottom: 8px; font-size: 15px; }
+
+.nearby { font-size: 13px; }
+.nb-head { color: var(--ink-3); font-size: 12px; margin: 0 0 8px; }
+.nb-row {
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 10px;
+  padding: 9px 0; border-bottom: 1px solid var(--rule-2);
+}
+.nb-dist { color: var(--ink); font-weight: 700; }
+.nb-km { color: var(--ink-3); font-family: var(--num); font-variant-numeric: tabular-nums; }
+.nb-shop { grid-column: 1 / -1; color: var(--ink-3); font-size: 12px; }
+.nb-note { color: var(--ink-4); font-size: 11.5px; margin: 10px 0 0; }
+
+/* ------------------------------------------------------------------ 单文件 */
+.page[hidden] { display: none; }
+
 /* ------------------------------------------------------------------ 响应式 */
 @media (max-width: 980px) {
   .head-grid { grid-template-columns: 1fr; gap: 34px; }
   .plates.two { grid-template-columns: 1fr; }
   .kv { grid-template-columns: 120px minmax(0, 1fr); }
+  .mapgrid { grid-template-columns: 1fr; }
+  .mapcol { border-right: 0; border-bottom: 1px solid var(--rule); }
+  .mapside { padding: 18px 0 0; }
 }
 @media (max-width: 720px) {
   .wrap, .narrow { width: min(100% - 32px, 100%); }
