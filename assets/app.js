@@ -695,9 +695,18 @@
 
     var maxIn = Math.max.apply(null, dists.map(function (d) { return d.in_top; })) || 1;
 
+    /* 热度配色：紫（少）→ 红（多），RGB 空间线性插值 */
+    var COLD = [110, 63, 163], HOT = [217, 58, 50];
+    function heatRGB(t) {
+      return COLD.map(function (v, i) { return Math.round(v + (HOT[i] - v) * t); });
+    }
+
     dists.forEach(function (d) {
       var dot = document.createElement('i');
       var t = Math.sqrt(d.in_top / maxIn);
+      var c = heatRGB(t);
+      dot.style.background = 'radial-gradient(circle, rgb(' + c.join(',') + ') 0%, rgba(' +
+        c.join(',') + ',0.42) 38%, rgba(' + c.join(',') + ',0) 70%)';
       dot.dataset.lat = d.lat;
       dot.dataset.lng = d.lng;
       dot.dataset.r = (24 + 88 * t).toFixed(0);
@@ -709,6 +718,18 @@
     var me = document.createElement('i');
     me.className = 'me hidden';
     layer.appendChild(me);
+
+    /* 路线层同样走 DOM 叠加：projectToContainer 换算成像素，随视图自动跟随 */
+    var lineSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    lineSvg.setAttribute('class', 'heatline');
+    var routePoly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+    routePoly.setAttribute('class', 'route');
+    lineSvg.appendChild(routePoly);
+    box.appendChild(lineSvg);
+
+    var routePoints = null;
+    var routeFrom = null;
+    var routeTarget = null;
 
     function place() {
       var zoomK = Math.pow(1.28, (map.getZoom() || 11) - 11.5);
@@ -727,6 +748,14 @@
       if (meNode && meNode.dataset.lat) {
         var mp = map.projectToContainer(new TMap.LatLng(+meNode.dataset.lat, +meNode.dataset.lng));
         meNode.style.transform = 'translate3d(' + mp.x + 'px,' + mp.y + 'px,0)';
+      }
+      if (routePoints && routePoints.length) {
+        var pts = [];
+        for (var k = 0; k < routePoints.length; k++) {
+          var pp = map.projectToContainer(new TMap.LatLng(routePoints[k].lat, routePoints[k].lng));
+          pts.push(pp.x.toFixed(1) + ',' + pp.y.toFixed(1));
+        }
+        routePoly.setAttribute('points', pts.join(' '));
       }
       updateScale();
     }
@@ -791,17 +820,87 @@
         var g = wgs2gcj(pos.coords.latitude, pos.coords.longitude);
         me.dataset.lat = g[0]; me.dataset.lng = g[1];
         me.classList.remove('hidden');
+        routeFrom = { lat: g[0], lng: g[1] };
         map.setCenter(new TMap.LatLng(g[0], g[1]));
         map.setZoom(13);
         schedule();
         if (tip) tip.textContent = '已定位，按商圈中心给出最近的五个区域。';
-        renderNearby(g[0], g[1]);
+        var list = renderNearby(g[0], g[1]);
+        if (list && list.length) planTo(list[0].d.lat, list[0].d.lng, list[0].d.best ? list[0].d.best.name : list[0].d.name);
       }, function () {
         if (tip) tip.textContent = '定位未授权或被拒绝，可选择下面的商圈看附近推荐。';
         renderNearbyStatic();
       }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 });
     }
     bind('#mLocate', locate);
+
+    /* ---------------- 路线规划（腾讯地图路线服务） ---------------- */
+    var msgEl = el('#mapMsg'), routePanel = el('#routePanel');
+
+    function say(t) { if (msgEl) msgEl.textContent = t; }
+
+    var MODE_LABEL = { driving: '驾车', transit: '公交', walking: '步行', biking: '骑行' };
+
+    function planTo(lat, lng, label) {
+      var origin = routeFrom;
+      if (!origin) {
+        /* 没拿到定位时，用城区中心当起点，功能照样可用 */
+        origin = { lat: geo.center.lat, lng: geo.center.lng };
+        say('未获取到你的位置，先以城区中心为起点。');
+      }
+      routeTarget = { lat: lat, lng: lng, name: label };
+      if (!window.TMap || !TMap.service) {
+        say('路线服务未加载：SDK 需带 libraries=service，且路线接口要经地图服务代理。');
+        return;
+      }
+      var mode = (el('#routeMode') || {}).value || 'driving';
+      var svc;
+      if (mode === 'transit') svc = new TMap.service.Transit({ policy: 'LEAST_TIME' });
+      else if (mode === 'walking') svc = new TMap.service.Walking();
+      else if (mode === 'biking') svc = new TMap.service.Bicycling();
+      else svc = new TMap.service.Driving({ policy: 'LEAST_TIME' });
+      say('正在规划' + MODE_LABEL[mode] + '路线…');
+      svc.search({
+        from: new TMap.LatLng(origin.lat, origin.lng),
+        to: new TMap.LatLng(lat, lng)
+      }).then(function (res) {
+        var plan = (res && res.result) ? res.result : res;
+        var r = plan && plan.routes && plan.routes[0];
+        if (!r) { say('没有找到可行路线。'); return; }
+        routePoints = r.polyline || [];
+        schedule();
+        var km = (r.distance / 1000).toFixed(1);
+        var mins = Math.round(r.duration);
+        var steps = (r.steps || []).filter(function (s) { return s.instruction; }).slice(0, 6)
+          .map(function (s) {
+            var m = s.mode === 'WALKING' ? '步行' : (s.mode === 'TRANSIT' ? '公交' : MODE_LABEL[mode]);
+            return '<div class="rt-step"><span class="rt-m">' + m + '</span>' +
+              '<span class="rt-i">' + esc(s.instruction) + '</span></div>';
+          }).join('');
+        if (routePanel) {
+          routePanel.innerHTML =
+            '<p class="nb-head">' + (routeFrom ? '当前位置' : '城区中心') + ' → ' + esc(label) + '</p>' +
+            '<p class="rt-sum"><b>' + km + '</b> 公里<span class="rt-sep">·</span><b>' + mins + '</b> 分钟' +
+            '<span class="rt-mode">' + MODE_LABEL[mode] + '</span></p>' +
+            (steps || '<p class="nb-note">这条路线没有分段说明。</p>');
+        }
+        say('路线已画在图上。');
+      }).catch(function (e) {
+        say('路线服务不可用：' + ((e && e.message) ? e.message : '未授权或网络受限') +
+          '。路线接口要走地图服务代理，在 WorkBuddy 预览里可用。');
+      });
+    }
+
+    bind('#routeGo', function () {
+      var sel = el('#dPick');
+      if (!sel || !sel.value) { say('先在地图控件里选一个商圈。'); return; }
+      var t = dists.filter(function (d) { return d.name === sel.value; })[0];
+      if (t) planTo(t.lat, t.lng, t.best ? t.best.name : t.name);
+    });
+    var modeSel = el('#routeMode');
+    if (modeSel) modeSel.addEventListener('change', function () {
+      if (routeTarget) planTo(routeTarget.lat, routeTarget.lng, routeTarget.name);
+    });
 
     function ranked(lat, lng) {
       return dists.map(function (d) {
@@ -815,16 +914,25 @@
       if (!nearby) return;
       nearby.innerHTML = '<p class="nb-head">' + esc(head) + '</p>' +
         rows.map(function (x) {
-          return '<div class="nb-row">' +
+          return '<div class="nb-row" data-lat="' + x.d.lat + '" data-lng="' + x.d.lng +
+            '" data-name="' + esc(x.d.best ? x.d.best.name : x.d.name) + '">' +
             '<span class="nb-dist">' + esc(x.d.name) + '</span>' +
             '<span class="nb-km">' + x.km.toFixed(1) + ' km</span>' +
             '<span class="nb-shop">' + (x.d.best ? esc(x.d.best.name) + '　第 ' + x.d.best.rank + ' 名' : '—') + '</span>' +
             '</div>';
         }).join('') +
-        '<p class="nb-note">距离按商圈近似中心计算，不代表门店实际位置。</p>';
+        '<p class="nb-note">距离按商圈近似中心计算，不代表门店实际位置。点一行可规划到该商圈的路线。</p>';
+      els('.nb-row', nearby).forEach(function (row) {
+        row.addEventListener('click', function () {
+          els('.nb-row', nearby).forEach(function (o) { o.classList.remove('on'); });
+          row.classList.add('on');
+          planTo(+row.getAttribute('data-lat'), +row.getAttribute('data-lng'), row.getAttribute('data-name'));
+        });
+      });
+      return rows;
     }
 
-    function renderNearby(lat, lng) { paintNearby(ranked(lat, lng), '离你最近的五个商圈'); }
+    function renderNearby(lat, lng) { return paintNearby(ranked(lat, lng), '离你最近的五个商圈'); }
 
     function renderNearbyStatic() {
       paintNearby(ranked(geo.center.lat, geo.center.lng), '以城区中心为参照的五个商圈');
