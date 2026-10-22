@@ -218,7 +218,7 @@
   function stackedTop(host, items) {
     var data = items.slice(0, 15);
     var W = 620, labelW = 196, padR = 54, rowH = 27, top = 8;
-    var H = top * 2 + data.length * rowH + 26;
+    var H = top * 2 + data.length * rowH + 8;
     var barX = labelW, barW = W - labelW - padR;
     var max = Math.max.apply(null, data.map(function (d) { return d.final_score; })) || 1;
     var b = '';
@@ -235,11 +235,6 @@
       b += txt(barX + barW + 8, y + rowH * 0.62, d.final_score.toFixed(3),
         { size: 11.5, fill: '#15181D', weight: 600, mono: true });
     });
-    var ly = H - 12;
-    b += rect(W - 300, ly - 8, 9, 9, BRAND, { rx: 2 });
-    b += txt(W - 286, ly, '评分贡献 0.625×n', { size: 10.5, fill: '#6E7480' });
-    b += rect(W - 190, ly - 8, 9, 9, TEAL, { rx: 2 });
-    b += txt(W - 176, ly, '评论贡献 0.375×n', { size: 10.5, fill: '#6E7480' });
     host.innerHTML = svg(W, H, b);
   }
 
