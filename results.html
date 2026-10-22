@@ -5,8 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>榜单 · 北京餐厅 Top100</title>
 <meta name="description" content="100 家入榜门店明细、六张图表，以及可以现场改口径的模拟器。">
-<link rel="stylesheet" href="assets/base.css?v=4">
+<link rel="stylesheet" href="assets/base.css?v=5">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%231B4B72'/><text x='16' y='23' font-size='17' font-family='Georgia,serif' font-weight='700' fill='white' text-anchor='middle'>京</text></svg>">
+<!-- 腾讯地图 GL JS：先配代理再加载 SDK，前端不出现 key -->
+<script>
+  window._TMapSecurityConfig = {
+    serviceHost: 'http://127.0.0.1:__WB_HTTP_PORT__/_TMapService/_wbt/__WB_TMAP_SECRET__',
+  };
+</script>
+<script src="https://map.qq.com/api/gljs?v=1.exp"></script>
 </head>
 <body data-page="results">
 
@@ -31,6 +38,12 @@
       <p class="lede">
         150 家候选先过评论数门槛，再按双维度加权排序，最后按品牌去重，每家留一席。
         结果是 100 家店、100 个品牌，覆盖 47 个细分品类、9 个菜系、48 个商圈。
+      </p>
+      <p class="en">
+        All 150 candidates pass a review-count threshold, are ranked on two weighted
+        dimensions, then deduplicated by brand down to one seat each. What survives is
+        100 restaurants, 100 brands, spread over 47 fine-grained categories, 9 cuisines
+        and 48 commercial districts.
       </p>
     </div>
     <div class="sheet">
@@ -105,6 +118,9 @@
       <div class="rule"></div>
       <h2>六张图</h2>
       <p>前三张看排序结构，中间两张看供给结构，最后一张看数据的形状。每张图后面那句话才是要点。</p>
+      <p class="en">The first three show how the ranking is built, the next two how supply is
+        distributed, and the last one the shape of the data itself. The sentence under each
+        chart is the point; the chart is the evidence.</p>
     </div>
 
     <div class="plates">
@@ -201,9 +217,69 @@
   <div class="wrap">
     <div class="h2blk">
       <div class="rule"></div>
+      <h2>位置</h2>
+      <p>入榜的 100 家集中在哪几个商圈，以及离某个点最近的是哪几个。一个点代表一个商圈，热度按该商圈的入榜家数着色。</p>
+      <p class="en">Where the 100 restaurants cluster, and which districts sit closest to a given point.
+        Each dot is one commercial district, shaded by how many of its restaurants made the list.</p>
+    </div>
+
+    <div class="mapgrid">
+      <div class="mapcol">
+        <div class="mapctl" id="mapCtl">
+          <button id="zIn">放大</button>
+          <button id="zOut">缩小</button>
+          <button id="mReset">复位</button>
+          <button id="mLocate">定位我</button>
+          <span><label for="rotRange">旋转</label><input id="rotRange" type="range" min="-180" max="180" step="1" value="0"></span>
+          <span><label for="scaleRange">比例</label><input id="scaleRange" type="range" min="0.6" max="1.8" step="0.02" value="1"></span>
+          <select id="dPick"><option value="">跳到商圈</option></select>
+        </div>
+
+        <div class="mapstage">
+          <div id="mapCanvas"></div>
+          <div class="maptip" id="mapTip">拖动平移，滚轮缩放，控件可旋转与改比例。</div>
+          <div class="scalebar"><u id="scaleBar" style="width:80px"></u><span id="scaleTxt">1 km</span></div>
+          <div class="readout" id="mapReadout">z 11.5　0°　×1.00</div>
+        </div>
+
+        <div class="mapfallback" id="mapFallback" hidden>
+          <b>底图未加载</b>
+          腾讯地图 SDK 需要 WorkBuddy 预览环境转发，或替换为自己的地图 key。
+          下面的商圈热度排行与附近推荐不依赖底图，仍然可用。
+        </div>
+      </div>
+
+      <div class="mapside">
+        <div class="nearby" id="nearbyList"></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:36px;margin-top:26px">
+      <div class="note plain">
+        <b>坐标是商圈级近似，不是门店坐标。</b>
+        列表页不带经纬度，详页也没抓 POI。地图上的点按商圈中心人工标定，
+        同一商圈的门店共用同一个点，量级误差约 0.3 到 3 公里。
+        这张图只能回答「哪个商圈热」，不能回答「这家店在哪」。
+      </div>
+      <div class="note plain">
+        <b>附近推荐同样按商圈计算。</b>
+        定位只在本机使用，坐标不出浏览器，也不写入任何存储。
+        浏览器给的是 WGS84 坐标，地图用 GCJ-02，两者在北京相差约 500 米，代码里做了一次换算。
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section band">
+  <div class="wrap">
+    <div class="h2blk">
+      <div class="rule"></div>
       <h2>换个口径看看</h2>
       <p>下面三个旋钮就是 <code>config/scoring.yaml</code> 的三个参数。整条流水线在浏览器里重算，
          与 <code>build_ranking.py</code> 等价：定稿参数下名次 100/100 一致。</p>
+      <p class="en">The three controls below are the three parameters in <code>config/scoring.yaml</code>.
+        The whole pipeline is recomputed in the browser and reproduces the shipped ranking
+        exactly: 100 of 100 positions match at the default settings.</p>
     </div>
 
     <div class="trial">
@@ -263,7 +339,7 @@
   </div>
 </section>
 
-<section class="section band">
+<section class="section">
   <div class="wrap">
     <div class="h2blk">
       <div class="rule"></div>
@@ -301,7 +377,7 @@
   </div>
 </footer>
 
-<script src="assets/data.js?v=4"></script>
-<script src="assets/app.js?v=4"></script>
+<script src="assets/data.js?v=5"></script>
+<script src="assets/app.js?v=5"></script>
 </body>
 </html>
