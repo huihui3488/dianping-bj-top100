@@ -510,7 +510,7 @@
       var s = window.CODE_SNIPPETS[key];
       if (!s) return;
       current = key;
-      host.innerHTML = s.html.join('');
+      host.innerHTML = hlPython(s.src).join('');
       pathEl.textContent = s.name;
       tailEl.textContent = s.lines + ' 行';
       host.scrollTop = 0;
@@ -564,6 +564,313 @@
     });
   }
 
+  /* ---------------------------------------------------------------- 代码着色 */
+  /* 与 build_site.py 的 highlight() 同一套规则，改为前端执行：
+     源码只存一份字符串，四个页面切 tab 才解析，单文件版也不会被 span 撑大。 */
+  var KW = {};
+  ('False None True and as assert async await break class continue def del elif else '
+    + 'except finally for from global if import in is lambda nonlocal not or pass raise '
+    + 'return try while with yield self').split(' ').forEach(function (w) { KW[w] = 1; });
+  var BT = {};
+  ('print len int float str dict list set tuple range enumerate zip sorted sum min max '
+    + 'open round abs isinstance type Exception Path Counter OrderedDict defaultdict'
+  ).split(' ').forEach(function (w) { BT[w] = 1; });
+
+  var TKR = /(\#[^\n]*)|("""[\s\S]*?"""|'''[\s\S]*?''')|([rbfu]?"(?:\\.|[^"\\\n])*"|[rbfu]?'(?:\\.|[^'\\\n])*')|(\b\d+\.?\d*\b)|([A-Za-z_]\w*)|([^\w\s])|(\s+)/g;
+
+  function hlPython(src) {
+    var lines = [[]];
+    function emit(cls, text) {
+      var parts = text.split('\n');
+      for (var i = 0; i < parts.length; i++) {
+        if (i) lines.push([]);
+        if (!parts[i]) continue;
+        lines[lines.length - 1].push(cls ? '<span class="' + cls + '">' + esc(parts[i]) + '</span>'
+          : esc(parts[i]));
+      }
+    }
+    var m;
+    TKR.lastIndex = 0;
+    while ((m = TKR.exec(src)) !== null) {
+      var t = m[0], cls = '';
+      if (m[1] !== undefined) cls = 't-cm';
+      else if (m[2] !== undefined || m[3] !== undefined) cls = 't-st';
+      else if (m[4] !== undefined) cls = 't-nu';
+      else if (m[5] !== undefined) {
+        cls = KW[t] ? 't-kw' : (BT[t] ? 't-bt'
+          : (t.length > 1 && t === t.toUpperCase() && /[A-Z]/.test(t) ? 't-cn' : ''));
+      } else if (m[6] !== undefined) cls = 't-op';
+      emit(cls, t);
+    }
+    return lines.map(function (frags, i) {
+      var n = i + 1;
+      return '<div class="cl"><a class="cln" href="#L' + n + '" id="L' + n + '">' + n +
+        '</a><span class="clc">' + (frags.join('') || '&nbsp;') + '</span></div>';
+    });
+  }
+
+  /* ---------------------------------------------------------------- 经纬度工具 */
+  function toRad(d) { return d * Math.PI / 180; }
+
+  function distanceKm(aLat, aLng, bLat, bLng) {
+    var R = 6371, dLat = toRad(bLat - aLat), dLng = toRad(bLng - aLng);
+    var s = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
+  }
+
+  /* 浏览器定位给的是 WGS84，腾讯地图用 GCJ-02，北京一带偏移约 500 米，先转一下 */
+  function wgs2gcj(lat, lng) {
+    if (lng < 72.004 || lng > 137.8347 || lat < 0.8293 || lat > 55.8271) return [lat, lng];
+    var a = 6378245.0, ee = 0.00669342162296594323;
+    function tLat(x, y) {
+      var r = -100 + 2 * x + 3 * y + 0.2 * y * y + 0.1 * x * y + 0.2 * Math.sqrt(Math.abs(x));
+      r += (20 * Math.sin(6 * x * Math.PI) + 20 * Math.sin(2 * x * Math.PI)) * 2 / 3;
+      r += (20 * Math.sin(y * Math.PI) + 40 * Math.sin(y / 3 * Math.PI)) * 2 / 3;
+      r += (160 * Math.sin(y / 12 * Math.PI) + 320 * Math.sin(y * Math.PI / 30)) * 2 / 3;
+      return r;
+    }
+    function tLng(x, y) {
+      var r = 300 + x + 2 * y + 0.1 * x * x + 0.1 * x * y + 0.1 * Math.sqrt(Math.abs(x));
+      r += (20 * Math.sin(6 * x * Math.PI) + 20 * Math.sin(2 * x * Math.PI)) * 2 / 3;
+      r += (20 * Math.sin(x * Math.PI) + 40 * Math.sin(x / 3 * Math.PI)) * 2 / 3;
+      r += (150 * Math.sin(x / 12 * Math.PI) + 300 * Math.sin(x / 30 * Math.PI)) * 2 / 3;
+      return r;
+    }
+    var dLat = tLat(lng - 105, lat - 35), dLng = tLng(lng - 105, lat - 35);
+    var radLat = toRad(lat), magic = 1 - ee * Math.sin(radLat) * Math.sin(radLat);
+    var sq = Math.sqrt(magic);
+    dLat = (dLat * 180) / ((a * (1 - ee)) / (magic * sq) * Math.PI);
+    dLng = (dLng * 180) / (a / sq * Math.cos(radLat) * Math.PI);
+    return [lat + dLat, lng + dLng];
+  }
+
+  /* ---------------------------------------------------------------- 位置热力图 */
+  var mapReady = false;
+
+  function initMap() {
+    if (mapReady) return;
+    var box = el('#mapCanvas');
+    if (!box || !window.SITE.geo) return;
+    /* 单文件版里榜单页初始是隐藏的，容器高度为 0 时不能建图，等切到该页再来 */
+    var page = document.querySelector('.page[data-route="list"]');
+    if (page && page.hidden) {
+      window.__onPageShown = function (r) { if (r === 'list') initMap(); };
+      return;
+    }
+    mapReady = true;
+    var geo = window.SITE.geo, dists = geo.districts || [];
+    var tip = el('#mapTip'), readout = el('#mapReadout'), nearby = el('#nearbyList');
+    var scaleBar = el('#scaleBar'), scaleTxt = el('#scaleTxt');
+
+    function fallback(msg) {
+      var holder = el('#mapFallback');
+      if (holder) { holder.hidden = false; }
+      box.style.display = 'none';
+      var ctl = el('#mapCtl'); if (ctl) ctl.style.display = 'none';
+      if (tip) tip.textContent = msg;
+    }
+
+    if (!window.TMap) {
+      fallback('腾讯地图 SDK 未加载：底图需要 WorkBuddy 预览环境，或替换为自己的地图 key。');
+      renderNearbyStatic();
+      return;
+    }
+
+    var map = new TMap.Map(box, {
+      center: new TMap.LatLng(geo.center.lat, geo.center.lng),
+      zoom: 11.5,
+      rotation: 0,
+      pitch: 0,
+      scale: 1,
+      showControl: false,
+      minZoom: 9,
+      maxZoom: 18
+    });
+
+    /* 热度层用 DOM 叠加，位置由 projectToContainer 换算，随平移旋转缩放自动跟随 */
+    var layer = document.createElement('div');
+    layer.className = 'heat';
+    box.appendChild(layer);
+
+    var maxIn = Math.max.apply(null, dists.map(function (d) { return d.in_top; })) || 1;
+
+    dists.forEach(function (d) {
+      var dot = document.createElement('i');
+      var t = Math.sqrt(d.in_top / maxIn);
+      dot.dataset.lat = d.lat;
+      dot.dataset.lng = d.lng;
+      dot.dataset.r = (24 + 88 * t).toFixed(0);
+      dot.dataset.o = (0.20 + 0.38 * t).toFixed(2);
+      dot.title = d.name + '　入榜 ' + d.in_top + ' 家 / 候选 ' + d.total + ' 家';
+      layer.appendChild(dot);
+    });
+
+    var me = document.createElement('i');
+    me.className = 'me hidden';
+    layer.appendChild(me);
+
+    function place() {
+      var zoomK = Math.pow(1.28, (map.getZoom() || 11) - 11.5);
+      var nodes = layer.querySelectorAll('i');
+      for (var i = 0; i < nodes.length; i++) {
+        var n = nodes[i];
+        if (n.classList.contains('me')) continue;
+        var p = map.projectToContainer(new TMap.LatLng(+n.dataset.lat, +n.dataset.lng));
+        var r = +n.dataset.r * zoomK;
+        n.style.width = n.style.height = r + 'px';
+        n.style.marginLeft = n.style.marginTop = (-r / 2) + 'px';
+        n.style.opacity = n.dataset.o;
+        n.style.transform = 'translate3d(' + p.x + 'px,' + p.y + 'px,0)';
+      }
+      var meNode = layer.querySelector('.me');
+      if (meNode && meNode.dataset.lat) {
+        var mp = map.projectToContainer(new TMap.LatLng(+meNode.dataset.lat, +meNode.dataset.lng));
+        meNode.style.transform = 'translate3d(' + mp.x + 'px,' + mp.y + 'px,0)';
+      }
+      updateScale();
+    }
+
+    function updateScale() {
+      var c = map.getCenter();
+      var p1 = map.projectToContainer(c);
+      var p2 = map.projectToContainer(new TMap.LatLng(c.lat, c.lng + 0.01));
+      var pxPerKm = Math.abs(p2.x - p1.x) / (0.01 * 111.32 * Math.cos(toRad(c.lat)));
+      if (!isFinite(pxPerKm) || pxPerKm <= 0) return;
+      var wants = [0.2, 0.5, 1, 2, 5, 10, 20, 50];
+      var pick = wants[0];
+      for (var i = 0; i < wants.length; i++) { if (wants[i] * pxPerKm <= 140) pick = wants[i]; }
+      if (scaleBar) scaleBar.style.width = (pick * pxPerKm).toFixed(0) + 'px';
+      if (scaleTxt) scaleTxt.textContent = pick < 1 ? (pick * 1000) + ' m' : pick + ' km';
+      if (readout) {
+        readout.textContent = 'z ' + (map.getZoom() || 0).toFixed(1) +
+          '　' + Math.round(map.getRotation() || 0) + '°　×' + (map.getScale() || 1).toFixed(2);
+      }
+    }
+
+    var raf = 0;
+    function schedule() {
+      if (raf) return;
+      raf = requestAnimationFrame(function () { raf = 0; place(); });
+    }
+    ['pan', 'zoom', 'rotate', 'pitch', 'resize', 'idle'].forEach(function (ev) {
+      map.on(ev, schedule);
+    });
+    place();
+
+    /* 控件 */
+    function bind(id, fn) { var n = el(id); if (n) n.addEventListener('click', fn); }
+    bind('#zIn', function () { map.setZoom(Math.min(18, (map.getZoom() || 11) + 1)); });
+    bind('#zOut', function () { map.setZoom(Math.max(9, (map.getZoom() || 11) - 1)); });
+    bind('#mReset', function () {
+      map.setRotation(0); map.setScale(1);
+      map.setCenter(new TMap.LatLng(geo.center.lat, geo.center.lng));
+      map.setZoom(11.5);
+      var rs = el('#rotRange'), ss = el('#scaleRange');
+      if (rs) rs.value = 0;
+      if (ss) ss.value = 1;
+      schedule();
+    });
+    var rot = el('#rotRange');
+    if (rot) rot.addEventListener('input', function () {
+      map.setRotation(parseFloat(rot.value)); schedule();
+    });
+    var sc = el('#scaleRange');
+    if (sc) sc.addEventListener('input', function () {
+      map.setScale(parseFloat(sc.value)); schedule();
+    });
+
+    /* 定位 + 附近推荐 */
+    function locate() {
+      if (tip) tip.textContent = '正在获取定位…';
+      if (!navigator.geolocation) {
+        if (tip) tip.textContent = '当前浏览器不支持定位，可选择下面的商圈。';
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        var g = wgs2gcj(pos.coords.latitude, pos.coords.longitude);
+        me.dataset.lat = g[0]; me.dataset.lng = g[1];
+        me.classList.remove('hidden');
+        map.setCenter(new TMap.LatLng(g[0], g[1]));
+        map.setZoom(13);
+        schedule();
+        if (tip) tip.textContent = '已定位，按商圈中心给出最近的五个区域。';
+        renderNearby(g[0], g[1]);
+      }, function () {
+        if (tip) tip.textContent = '定位未授权或被拒绝，可选择下面的商圈看附近推荐。';
+        renderNearbyStatic();
+      }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 });
+    }
+    bind('#mLocate', locate);
+
+    function ranked(lat, lng) {
+      return dists.map(function (d) {
+        return { d: d, km: distanceKm(lat, lng, d.lat, d.lng) };
+      }).filter(function (x) { return x.d.in_top > 0; })
+        .sort(function (a, b) { return a.km - b.km; })
+        .slice(0, 5);
+    }
+
+    function paintNearby(rows, head) {
+      if (!nearby) return;
+      nearby.innerHTML = '<p class="nb-head">' + esc(head) + '</p>' +
+        rows.map(function (x) {
+          return '<div class="nb-row">' +
+            '<span class="nb-dist">' + esc(x.d.name) + '</span>' +
+            '<span class="nb-km">' + x.km.toFixed(1) + ' km</span>' +
+            '<span class="nb-shop">' + (x.d.best ? esc(x.d.best.name) + '　第 ' + x.d.best.rank + ' 名' : '—') + '</span>' +
+            '</div>';
+        }).join('') +
+        '<p class="nb-note">距离按商圈近似中心计算，不代表门店实际位置。</p>';
+    }
+
+    function renderNearby(lat, lng) { paintNearby(ranked(lat, lng), '离你最近的五个商圈'); }
+
+    function renderNearbyStatic() {
+      paintNearby(ranked(geo.center.lat, geo.center.lng), '以城区中心为参照的五个商圈');
+    }
+    renderNearbyStatic();
+
+    var pick = el('#dPick');
+    if (pick) {
+      var ds = dists.slice().sort(function (a, b) { return b.in_top - a.in_top; });
+      ds.forEach(function (d) {
+        var o = document.createElement('option');
+        o.value = d.name;
+        o.textContent = d.name + '（入榜 ' + d.in_top + '）';
+        pick.appendChild(o);
+      });
+      pick.addEventListener('change', function () {
+        var t = ds.filter(function (d) { return d.name === pick.value; })[0];
+        if (!t) return;
+        map.setCenter(new TMap.LatLng(t.lat, t.lng));
+        map.setZoom(13.5);
+        schedule();
+        renderNearby(t.lat, t.lng);
+      });
+    }
+  }
+
+  /* ---------------------------------------------------------------- 单文件路由 */
+  function initRouter() {
+    var pages = els('.page');
+    if (!pages.length) return;
+    function go() {
+      var id = (location.hash || '#home').slice(1);
+      var hit = pages.filter(function (p) { return p.getAttribute('data-route') === id; })[0];
+      if (!hit) { id = 'home'; hit = pages[0]; }
+      pages.forEach(function (p) { p.hidden = p !== hit; });
+      els('.nav a').forEach(function (a) {
+        var on = a.getAttribute('href') === '#' + id;
+        if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+      });
+      if (window.__onPageShown) window.__onPageShown(id);
+      window.scrollTo(0, 0);
+    }
+    window.addEventListener('hashchange', go);
+    go();
+  }
+
   function boot() {
     initNumbers();
     initHead();
@@ -572,6 +879,8 @@
     initTrial();
     initCompare();
     initCode();
+    initMap();
+    initRouter();
     var y = el('#year'); if (y) y.textContent = new Date().getFullYear();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
