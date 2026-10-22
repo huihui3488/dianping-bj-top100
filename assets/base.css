@@ -404,15 +404,39 @@ pre.code .t-op { color: #A6AFBA; }
 .heat { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .heat i {
   position: absolute; left: 0; top: 0; border-radius: 50%;
-  background: radial-gradient(circle, rgba(27,75,114,.85) 0%, rgba(27,75,114,.45) 42%, rgba(27,75,114,0) 70%);
+  background: radial-gradient(circle, rgb(110,63,163) 0%, rgba(110,63,163,.42) 38%, rgba(110,63,163,0) 70%);
   will-change: transform, width, height;
 }
 .heat i.me {
   width: 16px; height: 16px; margin: -8px 0 0 -8px;
-  background: #A9713F; border: 2px solid #fff;
-  box-shadow: 0 0 0 1px #A9713F; opacity: 1;
+  background: #1B4B72; border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #1B4B72; opacity: 1;
 }
 .heat i.me.hidden { display: none; }
+
+/* 路线层：同样用 DOM 叠加，跟着视图走 */
+.heatline { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+.heatline .route {
+  fill: none; stroke: #1B4B72; stroke-width: 3.5;
+  stroke-linecap: round; stroke-linejoin: round;
+  paint-order: stroke; filter: drop-shadow(0 0 2px rgba(255,255,255,.9));
+}
+
+/* 热度色标：紫 → 红 */
+.heatlegend { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--ink-3); margin-bottom: 12px; }
+.heatlegend .grad {
+  flex: 1; height: 8px; border-radius: 4px;
+  background: linear-gradient(90deg, rgb(110,63,163) 0%, rgb(160,90,120) 50%, rgb(217,58,50) 100%);
+}
+.mapmsg { font-size: 12px; color: var(--ink-3); line-height: 1.65; padding-bottom: 14px; border-bottom: 1px solid var(--rule-2); margin-bottom: 14px; }
+.routepanel { margin-top: 16px; border-top: 1px solid var(--rule); padding-top: 14px; }
+.rt-sum { font-size: 14px; color: var(--ink-2); margin: 0 0 10px; }
+.rt-sum b { font-family: var(--num); font-size: 21px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.rt-sep { margin: 0 7px; color: var(--ink-4); }
+.rt-mode { float: right; font-size: 12px; color: #1B4B72; border: 1px solid rgba(27,75,114,.3); border-radius: 3px; padding: 1px 6px; }
+.rt-step { display: flex; gap: 8px; font-size: 12px; color: var(--ink-3); padding: 4px 0; line-height: 1.55; }
+.rt-m { flex: none; color: var(--blue); }
+.rt-i { flex: 1; }
 
 .scalebar {
   position: absolute; left: 14px; bottom: 14px; z-index: 3;
@@ -436,7 +460,10 @@ pre.code .t-op { color: #A6AFBA; }
 .nb-row {
   display: grid; grid-template-columns: 1fr auto; gap: 2px 10px;
   padding: 9px 0; border-bottom: 1px solid var(--rule-2);
+  cursor: pointer;
 }
+.nb-row:hover { background: #FAFAF8; }
+.nb-row.on { background: var(--blue-soft); box-shadow: inset 2px 0 0 var(--blue); padding-left: 8px; }
 .nb-dist { color: var(--ink); font-weight: 700; }
 .nb-km { color: var(--ink-3); font-family: var(--num); font-variant-numeric: tabular-nums; }
 .nb-shop { grid-column: 1 / -1; color: var(--ink-3); font-size: 12px; }
