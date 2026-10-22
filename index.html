@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>北京餐厅 Top100</title>
 <meta name="description" content="大众点评北京美食频道前十页的采集、解析与榜单建模结果：150 家候选，100 家入榜。">
-<link rel="stylesheet" href="assets/base.css?v=6">
+<link rel="stylesheet" href="assets/base.css?v=7">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%231B4B72'/><text x='16' y='23' font-size='17' font-family='Georgia,serif' font-weight='700' fill='white' text-anchor='middle'>京</text></svg>">
 </head>
 <body data-page="home">
@@ -76,6 +76,10 @@
         真正改变榜单的是筛选条件。权重从 0.625 换到 0.50 只换 4 家，换到 0.40 换 7 家；
         而把品牌限额从每家 1 席放开，直接换掉 15 家，品牌数从 100 掉到 85。
       </p>
+      <p class="en sub">
+        All three were surprises. Each was a parameter we had set by judgement, and each turned
+        out to be doing something different from what its name suggested.
+      </p>
     </div>
   </div>
 </section>
@@ -139,6 +143,11 @@
       但平台没有公开月售数据，详页里也搜不到，最后整个维度被删掉，权重按原比例还给前两项。
       这段论证在<a href="method.html">口径页</a>，如果只看一处，建议看那里。
     </p>
+    <p class="en sub">
+      The traffic dimension was not a tuning problem but an availability one: the platform publishes
+      no monthly-sales figure anywhere we could reach, so the dimension was dropped and its 0.20
+      weight redistributed across the other two in proportion.
+    </p>
   </div>
 </section>
 
@@ -186,7 +195,7 @@
   </div>
 </footer>
 
-<script src="assets/data.js?v=6"></script>
-<script src="assets/app.js?v=6"></script>
+<script src="assets/data.js?v=7"></script>
+<script src="assets/app.js?v=7"></script>
 </body>
 </html>
